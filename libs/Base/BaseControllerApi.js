@@ -148,19 +148,7 @@ class BaseController extends GlobalFunctions {
     }
 
     executeAuths(type) {
-        switch (type) {
-            case 'basic':
-                this.router.use(this.#basic());
-                break;
-            case 'bearer':
-                this.router.use(this.#bearer());
-                break;
-            case 'basicAccess':
-                this.router.use(this.#basicAccess());
-                break;
-            default:
-                throw new Error(`Unknown auth type: ${type}`);
-        }
+        eval(`this.router.use(this.#${type}())`);
     }
 
     getMain() {

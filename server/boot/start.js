@@ -17,7 +17,7 @@ const defaultController = Configure.read('default.prefix');
 const app = express();
 const homeRouter = express.Router();
 let sessionObj = {
-    secret: '272b1a3a2b5c03402b70d18fa93555fcc1d53c583b32258b8ae5bf4be6414d2e339232704e2270fe30bcf1860bb68e507c304ae4d49024d52c4cbc8871d38b2d',
+    secret: process.env.MAIN_KEY || 'test-secret',
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false }

@@ -12,7 +12,7 @@ class DashboardController extends Controller {
   }
 
   getDashboard(req, res) {
-    res.json({ message: 'this is Admin', data: res.tokenAuth().user() });
+    res.json({ message: 'this is Admin', data: this.tokenAuth().user() });
   }
 
   getRouter() {

@@ -13,7 +13,7 @@ class InfoController extends Controller {
   }
 
   getInfo(req, res) {
-    res.json({ message: 'Authenticated', data: res.bearerAuth().user() });
+    res.json({ message: 'Authenticated', data: this.bearerAuth().user() });
   }
 
   getRouter() {

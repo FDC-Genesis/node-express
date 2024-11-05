@@ -13,7 +13,7 @@ class LogoutController extends Controller {
   }
 
   async getLogout(req, res) {
-    let success = await this.getMain().revokeBearer(res.bearerId());
+    let success = await this.getMain().revokeBearer(this.bearerId());
     success = !!success;
     let message = `Revoked Successfully`;
     if (!success) {

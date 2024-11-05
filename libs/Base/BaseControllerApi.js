@@ -19,7 +19,23 @@ class BaseController extends GlobalFunctions {
         this.#bearerTable = Configure.read(`auth.bearer_tokens.${this.#modelName}.table`);
 
         this.router = express.Router();
+        this.router.use(this.#assignGlobal());
         this.loadUses([modelName]);
+    }
+
+    #assignGlobal() {
+        return (req, res, next) => {
+            this.paginate = (model = null) => {
+                try {
+                    return res.paginator().paginate(model, this.paginator)
+                } catch (err) {
+                    return [];
+                } finally {
+                    this.paginator = {};
+                }
+            };
+            next();
+        }
     }
 
     // authentications
@@ -43,8 +59,8 @@ class BaseController extends GlobalFunctions {
             }
             const bearerId = data.bearer_id;
             delete data.bearer_id;
-            res.bearerId = () => new IdGenerator(bearerId).id();
-            res.bearerAuth = () => new TokenAuth(data);
+            this.bearerId = () => new IdGenerator(bearerId).id();
+            this.bearerAuth = () => new TokenAuth(data);
             next();
         }
     }
@@ -81,8 +97,8 @@ class BaseController extends GlobalFunctions {
             const secretId = user.secret_id;
             user.token_type = "Bearer";
             delete user.secret_id;
-            res.secretId = () => new IdGenerator(secretId).id();
-            res.basicAuth = () => new TokenAuth(user);
+            this.secretId = () => new IdGenerator(secretId).id();
+            this.basicAuth = () => new TokenAuth(user);
             next();
         };
     }
@@ -101,8 +117,8 @@ class BaseController extends GlobalFunctions {
             }
             const tokenId = data.token_id;
             delete data.token_id;
-            res.tokenId = () => new IdGenerator(tokenId).id();
-            res.tokenAuth = () => new TokenAuth(data);
+            this.tokenId = () => new IdGenerator(tokenId).id();
+            this.tokenAuth = () => new TokenAuth(data);
             next();
         }
     }

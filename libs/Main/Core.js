@@ -32,19 +32,24 @@ class Core extends GlobalFunctions {
 
         const selectedFields = fields.length ? fields : [`${this.#modelName}.*`, ...builtJoins.mixedTable];
 
+        const sqlJoin = builtJoins.sql ? ` ${builtJoins.sql.trim()}` : '';
+        const sqlConditions = builtConditions.sql ? ` ${builtConditions.sql.trim()}` : '';
+        const sqlGroup = this.#buildGroup(group) ? ` ${this.#buildGroup(group).trim()}` : '';
+        const sqlOrder = this.#buildOrder(order) ? ` ${this.#buildOrder(order).trim()}` : '';
+        const sqlLAO = limitAndOffset ? ` ${limitAndOffset.trim()}` : '';
         // Building SQL query based on type
         switch (type) {
             case 'count':
-                sql += `COUNT(*) FROM ${this.tableName} AS ${this.#modelName} ${builtJoins.sql} ${builtConditions.sql} ${this.#buildGroup(group)} ${this.#buildOrder(order)};`;
+                sql += `COUNT(*) as count FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup};`;
                 break;
             case 'all':
-                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName} ${builtJoins.sql} ${builtConditions.sql} ${this.#buildGroup(group)} ${this.#buildOrder(order)} ${limitAndOffset};`;
+                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup}${sqlOrder}${sqlLAO};`;
                 break;
             case 'first':
-                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName} ${builtJoins.sql} ${builtConditions.sql} ${this.#buildGroup(group)} ${this.#buildOrder(order)} LIMIT 1;`;
+                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup}${sqlOrder} LIMIT 1;`;
                 break;
             case 'list':
-                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName} ${builtJoins.sql} ${builtConditions.sql} ${this.#buildGroup(group)} ${this.#buildOrder(order)} ${limitAndOffset};`;
+                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup}${sqlOrder}${sqlLAO};`;
                 break;
             default:
                 throw new Error(`Unsupported find type: ${type}`);
@@ -54,6 +59,9 @@ class Core extends GlobalFunctions {
             const data = await this.db.runQuery(sql, this.#values);
             if (data.length === 0) {
                 return null;
+            }
+            if (type === 'count') {
+                return Number(data[0].count);
             }
             return type === 'first' ? data[0] : data;
         } catch (error) {

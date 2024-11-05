@@ -1,20 +1,40 @@
 const express = require('express');
 const LoadModel = require('../Service/LoadModel');
-const GlobalFunctions = require('./GlobalFunctions');
 const Configure = require('../Service/Configure');
+const GlobalFunctions = require('./GlobalFunctions');
+
 
 
 class BaseController extends GlobalFunctions {
     allowedAuths = ['auth', 'guest'];
-    data = {};
+    #data = {};
     // prefix = "";
     constructor() {
         super();
         this.router = express.Router();
+        this.router.use(this.#assignGlobal());
+        this.paginator = {};
+    }
+
+    #assignGlobal() {
+        return (req, res, next) => {
+            this.paginate = (model = null) => {
+                try {
+                    return res.paginator().paginate(model, this.paginator)
+                } catch (err) {
+                    return [];
+                } finally {
+                    this.paginator = {};
+                }
+            };
+            this.render = (view = 'index') => res.render(view, this.#data);
+            this.auth = () => res.auth();
+            next();
+        }
     }
 
     // authentications
-    auth(role) {
+    #auth(role) {
         return (req, res, next) => {
             if (req.session.auth[role].isAuthenticated) {
                 next();
@@ -23,7 +43,7 @@ class BaseController extends GlobalFunctions {
             return res.redirect(Configure.read(`auth.providers.${Configure.read(`auth.guards.${role}.provider`)}.failed`));
         }
     }
-    guest(role) {
+    #guest(role) {
         return (req, res, next) => {
             if (!req.session.auth[role].isAuthenticated) {
                 next();
@@ -34,7 +54,7 @@ class BaseController extends GlobalFunctions {
     }
     // end of auitentications
     set(key, value) {
-        this.data[key] = value;
+        this.#data[key] = value;
     }
 
     loadUses(models = []) {
@@ -72,6 +92,9 @@ class BaseController extends GlobalFunctions {
 
     head(prefix, functionUsed) {
         this.router.head(`${prefix}`, functionUsed.bind(this));
+    }
+    executeAuth(type, user) {
+        eval(`this.router.use(this.#${type}(user))`);
     }
 }
 

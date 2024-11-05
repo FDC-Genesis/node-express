@@ -16,13 +16,11 @@ class RegisterController extends Controller {
   }
 
   getRegister(req, res) {
-    let data = {
-      title: "Register",
-      error: req.flash("error")[0] || {},
-      old: req.flash("old")[0] || {},
-      message: req.flash("message")[0] || false,
-    };
-    res.render("index", data);
+    this.set('title', 'Register');
+    this.set('error', req.flash('error')[0] || {});
+    this.set('old', req.flash('old')[0] || {});
+    this.set('message', req.flash('message')[0] || false);
+    this.render();
   }
   async postRegister(req, res) {
     const validate = await Validator.make(req.body, {
@@ -51,7 +49,7 @@ class RegisterController extends Controller {
         content: "This is an example mailer."
       });
       req.flash("success", `Developer created successfully.`);
-      return res.redirect(res.auth().guard('developer').redirectFail());
+      return res.redirect(this.guard('developer').redirectFail());
     }
     return res.redirect('/developer/register');
   }

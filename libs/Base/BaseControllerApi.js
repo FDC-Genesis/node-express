@@ -79,6 +79,7 @@ class BaseController extends GlobalFunctions {
             }
 
             const secretId = user.secret_id;
+            user.token_type = "Bearer";
             delete user.secret_id;
             res.secretId = () => new IdGenerator(secretId).id();
             res.basicAuth = () => new TokenAuth(user);

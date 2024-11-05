@@ -1,0 +1,41 @@
+<%- include('../../Defaults/header') %>
+<div class="container mt-5">
+    <h1>User List</h1>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Loop through your user data here -->
+            <!-- Example: -->
+            
+            <% data.Admin.forEach(user => { %>
+                <tr>
+                    <td><%= user.id %></td>
+                    <td><%= user.email %></td>
+                    <td><%= user.username %></td>
+                    <td><%= user.created_at %></td>
+                    <td><%= user.updated_at %></td>
+                </tr>
+            <% }); %> 
+           
+        </tbody>
+    </table>
+
+    <div>
+        <!-- Insert your pagination links here -->
+        <!-- Example: -->
+        
+        <%- data.links %>
+       
+    </div>
+</div>
+
+<%- include('../../Defaults/footer') %>

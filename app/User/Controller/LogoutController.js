@@ -13,8 +13,8 @@ class LogoutController extends Controller {
   }
 
   getLogout(req, res) {
-    res.auth().guard(this.user).logout();
-    res.redirect(res.auth().guard(this.user).redirectFail());
+    this.auth().guard(this.user).logout();
+    res.redirect(this.auth().guard(this.user).redirectFail());
   }
 
   getRouter() {

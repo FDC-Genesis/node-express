@@ -18,7 +18,7 @@ class LoginController extends Controller {
         this.set("error", req.flash("error")[0] || false);
         this.set("old", req.flash("old")[0] || false);
         this.set("success", req.flash("success")[0] || false);
-        res.render("index", this.data);
+        this.render();
     }
     async postLogin(req, res) {
         let validate = await Validator.make(req.body, {
@@ -29,13 +29,13 @@ class LoginController extends Controller {
         if (fail) {
             req.flash("error", validate.errors);
             req.flash("old", validate.old);
-            return res.redirect(res.auth().guard("developer").redirectFail());
+            return res.redirect(this.auth().guard("developer").redirectFail());
         }
-        let attempt = await res.auth().guard("developer").attempt({ username: req.body.username, password: req.body.password });
+        let attempt = await this.auth().guard("developer").attempt({ username: req.body.username, password: req.body.password });
         if (attempt) {
-            return res.redirect(res.auth().guard("developer").redirectAuth());
+            return res.redirect(this.auth().guard("developer").redirectAuth());
         }
-        return res.redirect(res.auth().guard("developer").redirectFail());
+        return res.redirect(this.auth().guard("developer").redirectFail());
     }
 
     getRouter() {

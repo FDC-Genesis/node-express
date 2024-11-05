@@ -8,11 +8,21 @@ class HomeController extends Controller {
   }
 
   initializeRoutes() {
-    this.router.get('/', this.getHome.bind(this));
+    this.get('/', this.getHome.bind(this));
   }
 
-  getHome(req, res) {
-    res.json({ message: 'this is Admin' });
+  async getHome(req, res) {
+    this.paginator["Admin"] = {
+      order: ['id ASC']
+    }
+    if (req.query.page) {
+      this.page = req.query.page;
+    }
+    let data = await this.paginate("Admin");
+    this.set('data', data);
+
+    this.log(data, 'debug');
+    this.render();
   }
 
   getRouter() {

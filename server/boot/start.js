@@ -10,9 +10,11 @@ const flash = require('connect-flash');
 const Configure = require('../../libs/Service/Configure');
 const Auth = require('../../libs/Middleware/Auth');
 const fs = require('fs');
+const Paginator = require('../../libs/Private/Paginator');
+const Boot = require('../../libs/Service/Boot');
 const defaultGuard = Configure.read('auth.default.guard');
 const defaultPrefix = Configure.read(`auth.providers.${Configure.read(`auth.guards.${defaultGuard}.provider`)}.prefix`);
-const defaultController = Configure.read('default.prefix');
+const defaultController = Configure.read('default.prefix_controller');
 
 const app = express();
 const homeRouter = express.Router();
@@ -60,6 +62,8 @@ app.set('view engine', 'ejs');
 function ucFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+Boot.up();
 
 const guards = Configure.read('auth.guards');
 const providers = Configure.read('auth.providers');
@@ -137,18 +141,24 @@ app.use((req, res, next) => {
 
     res.render = async function (view, locals, callback) {
         let newView;
-        const viewPath = path.join(__dirname, '..', '..', 'view', ucFirst(req.routeSrc.type), ucFirst(req.routeSrc.controller) ?? ucFirst(defaultController), `${view}.ejs`);
+        const viewPath = path.join(__dirname, '..', '..', 'view', ucFirst(req.routeSrc.type), ucFirst(req.routeSrc.controller || defaultController), `${view}.ejs`);
 
         try {
             await fs.promises.access(viewPath);
-            newView = `${ucFirst(req.routeSrc.type)}/${ucFirst(req.routeSrc.controller ?? defaultController)}/${view}`;
+            newView = `${ucFirst(req.routeSrc.type)}/${ucFirst(req.routeSrc.controller || defaultController)}/${view}`;
         } catch {
+            locals = { message: 'Page Not Found' };
             newView = path.join(__dirname, '..', '..', 'view', 'Error');
         }
 
         originalRender.call(res, newView, locals, callback);
     };
 
+    next();
+});
+
+app.use((req, res, next) => {
+    res.paginator = () => new Paginator(req);
     next();
 });
 

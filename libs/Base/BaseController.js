@@ -36,6 +36,10 @@ class BaseController extends GlobalFunctions {
             this.session.delete = (key) => delete req.session['global_variables'][key];
             this.flash.write = (key, value) => req.flash(key, value);
             this.flash.read = (key) => req.flash(key)[0] || false;
+            this.throwError = (message = 'Page not found') => {
+                const home = req.routeSrc.type;
+                res.render('Error', { message, home });
+            }
             next();
         }
     }

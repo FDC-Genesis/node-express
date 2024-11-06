@@ -72,24 +72,6 @@ class Core extends GlobalFunctions {
         }
     }
 
-    async attemptFind(type, options = {}) {
-        const { conditions = {} } = options;
-        const builtConditions = this.#buildConditions(conditions);
-        this.#values.push(...builtConditions.values);
-
-        const sql = `SELECT * FROM ${this.tableName} ${builtConditions.sql} LIMIT 1;`;
-
-        try {
-            const data = await this.db.runQuery(sql, this.#values);
-            return data[0] || null;
-        } catch (error) {
-            console.error("Error executing query:", error);
-            throw error;
-        } finally {
-            this.#values = [];
-        }
-    }
-
     async count(params = {}) {
         try {
             const data = await this.find('count', params);

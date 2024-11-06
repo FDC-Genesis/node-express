@@ -16,7 +16,7 @@ class Core extends GlobalFunctions {
         let sql = `SELECT`;
         let fields = options.fields || [];
         const conditions = options.conditions || {};
-        const builtConditions = this.buildConditions(conditions);
+        const builtConditions = this.#buildConditions(conditions);
         this.#values.push(...builtConditions.values);
         sql += ` ${fields.join(', ')} ` || ' * ';
         sql += `FROM ${this.tableName} ${builtConditions.sql} LIMIT 1`.trim() + ";";
@@ -32,7 +32,7 @@ class Core extends GlobalFunctions {
         }
     }
 
-    buildConditions(conditions = {}) {
+    #buildConditions(conditions = {}) {
         let sqlConditions = [];
         let values = [];
 

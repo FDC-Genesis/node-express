@@ -4,7 +4,6 @@ const Controller = require("../Controller");
 class LoginController extends Controller {
     constructor() {
         super();
-        this.set("title", "Login");
         this.initializeRoutes();
     }
 
@@ -15,9 +14,10 @@ class LoginController extends Controller {
     }
 
     getLogin(req, res) {
-        this.set("error", req.flash("error")[0] || false);
-        this.set("old", req.flash("old")[0] || false);
-        this.set("success", req.flash("success")[0] || false);
+        this.set("title", "Login");
+        this.set("error", this.flash.read('error'));
+        this.set("old", this.flash.read('old'));
+        this.set("success", this.flash.read('success'));
         this.render();
     }
     async postLogin(req, res) {
@@ -27,8 +27,8 @@ class LoginController extends Controller {
         });
         let fail = validate.fails();
         if (fail) {
-            req.flash("error", validate.errors);
-            req.flash("old", validate.old);
+            this.flash.write('error', validate.errors);
+            this.flash.write('old', validate.old);
             return res.redirect(this.auth().guard("admin").redirectFail());
         }
         let attempt = await this.auth().guard("admin").attempt({ username: req.body.username, password: req.body.password });

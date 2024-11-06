@@ -21,7 +21,6 @@ class HomeController extends Controller {
     let data = await this.paginate("Admin");
     this.set('data', data);
 
-    this.log(data, 'debug');
     this.render();
   }
 

@@ -10,7 +10,7 @@ class DashboardController extends Controller {
     this.get("/", this.getDashboard);
   }
   getDashboard(req, res) {
-    this.set('success', req.flash('logged')[0] || false);
+    this.set('success', this.flash.read('logged'));
     this.render();
   }
   getRouter() {

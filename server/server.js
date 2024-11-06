@@ -11,7 +11,7 @@ app.use((req, res) => {
     if (r === 'api') {
         sendApiResponse(res, 'Request URL not found');
     } else {
-        res.status(404).render('Error', { message: req.flash('message')[0] || 'Page Not Found' });
+        res.status(404).render('Error', { message: 'Page Not Found' });
     }
 });
 

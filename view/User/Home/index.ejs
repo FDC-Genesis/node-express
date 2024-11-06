@@ -1,6 +1,6 @@
 <%- include('../../Defaults/header') %>
 <div class="container mt-5">
-    <h1>Admin List</h1>
+    <h1>User List</h1>
 
     <table class="table table-bordered">
         <thead>
@@ -15,8 +15,8 @@
         <tbody>
             <!-- Loop through your user data here -->
             <!-- Example: -->
-            <% if (data.Admin && data.Admin.length > 0) {
-                data.Admin.forEach(user => { %>
+            <% if (data.User && data.User.length > 0) {
+                data.User.forEach(user => { %>
                     <tr>
                         <td><%= user.id %></td>
                         <td><%= user.email %></td>
@@ -27,7 +27,7 @@
                 <% });
             } else { %>
                 <tr>
-                    <td colspan="5">No admins found.</td>
+                    <td colspan="5">No users found.</td>
                 </tr>
             <% } %>
             %> 

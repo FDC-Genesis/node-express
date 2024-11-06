@@ -17,9 +17,9 @@ class RegisterController extends Controller {
 
   getRegister(req, res) {
     this.set('title', 'Register');
-    this.set('error', req.flash('error')[0] || {});
-    this.set('old', req.flash('old')[0] || {});
-    this.set('message', req.flash('message')[0] || false);
+    this.set('error', this.flash.read('error'));
+    this.set('old', this.flash.read('old'));
+    this.set('message', this.flash.read('message'));
     this.render();
   }
   async postRegister(req, res) {
@@ -32,8 +32,8 @@ class RegisterController extends Controller {
 
     // Check for validation failures
     if (fail) {
-      req.flash("error", validate.errors);
-      req.flash("old", validate.old);
+      this.flash.write('error', validate.errors);
+      this.flash.write('old', validate.old);
       return res.redirect('/developer/register');
     }
     let data = this.only(req.body, ["username", "email", "password"]);
@@ -48,7 +48,7 @@ class RegisterController extends Controller {
         header: "Account created successfully.",
         content: "This is an example mailer."
       });
-      req.flash("success", `Developer created successfully.`);
+      this.flash.write('success', `Developer created successfully.`);
       return res.redirect(this.guard('developer').redirectFail());
     }
     return res.redirect('/developer/register');

@@ -88,6 +88,9 @@ app.use((req, res, next) => {
             };
         }
     });
+    if (!req.session['global_variables']) {
+        req.session['global_variables'] = {};
+    }
     next();
 });
 

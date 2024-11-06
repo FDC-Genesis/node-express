@@ -14,6 +14,8 @@ class BaseController extends GlobalFunctions {
         this.router = express.Router();
         this.router.use(this.#assignGlobal());
         this.paginator = {};
+        this.session = {};
+        this.flash = {};
     }
 
     #assignGlobal() {
@@ -29,6 +31,11 @@ class BaseController extends GlobalFunctions {
             };
             this.render = (view = 'index') => res.render(view, this.#data);
             this.auth = () => res.auth();
+            this.session.read = (key) => req.session['global_variables'][key];
+            this.session.write = (key, value) => req.session['global_variables'][key] = value;
+            this.session.delete = (key) => delete req.session['global_variables'][key];
+            this.flash.write = (key, value) => req.flash(key, value);
+            this.flash.read = (key) => req.flash(key)[0] || false;
             next();
         }
     }

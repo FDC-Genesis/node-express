@@ -8,7 +8,7 @@ class DashboardController extends Controller {
 
   initializeRoutes() {
     this.middleware('basicAccess');
-    this.router.get('/', this.getDashboard.bind(this));
+    this.get('/', this.getDashboard);
   }
 
   getDashboard(req, res) {

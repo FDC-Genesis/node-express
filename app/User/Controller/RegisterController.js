@@ -34,7 +34,7 @@ class RegisterController extends Controller {
     if (fail) {
       this.flash.write('error', validate.errors);
       this.flash.write('old', validate.old);
-      return res.redirect('/user/register');
+      return res.redirect('/register');
     }
     let data = this.only(req.body, ["username", "email", "password"]);
     data.password = Hash.make(data.password);
@@ -49,9 +49,9 @@ class RegisterController extends Controller {
         content: "This is an example mailer."
       });
       this.flash.write('success', `User created successfully.`);
-      return res.redirect(this.auth().guard('user').redirectFail());
+      return res.redirect(this.auth('user').redirectFail());
     }
-    return res.redirect('/user/register');
+    return res.redirect('/register');
   }
 
   getRouter() {

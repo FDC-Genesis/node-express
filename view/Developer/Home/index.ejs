@@ -1,6 +1,14 @@
 <%- include('../../Defaults/header') %>
 <div class="container mt-5">
-    <h1>Developer List</h1>
+    <div class="d-flex justify-content-evenly align-items-center">
+        <h1>Developer List</h1>
+        <div>
+            <%
+                const redirection = !auth().guard('developer').check() ? 'login':'logout';
+            %>
+            <a href="/developer/<%= redirection %>" class="btn btn-sm btn-primary text-capitalize"><%= redirection %></a>
+        </div>
+    </div>
 
     <table class="table table-bordered">
         <thead>

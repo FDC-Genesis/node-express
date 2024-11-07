@@ -30,7 +30,7 @@ class Core extends GlobalFunctions {
         const builtConditions = this.#buildConditions(conditions);
         this.#values.push(...builtConditions.values);
 
-        const selectedFields = fields.length ? fields : [`${this.#modelName}.*`, ...builtJoins.mixedTable];
+        const selectedFields = fields.length > 0 ? fields : [`${this.#modelName}.*`, ...builtJoins.mixedTable];
 
         const sqlJoin = builtJoins.sql ? ` ${builtJoins.sql.trim()}` : '';
         const sqlConditions = builtConditions.sql ? ` ${builtConditions.sql.trim()}` : '';

@@ -30,7 +30,7 @@ class BaseController extends GlobalFunctions {
                 }
             };
             this.render = (view = 'index') => res.render(view, this.#data);
-            this.auth = () => res.auth();
+            this.auth = (guard = Configure.read('auth.default.guard')) => res.auth().guard(guard);
             this.session.read = (key) => req.session['global_variables'][key];
             this.session.write = (key, value) => req.session['global_variables'][key] = value;
             this.session.delete = (key) => delete req.session['global_variables'][key];
@@ -40,6 +40,8 @@ class BaseController extends GlobalFunctions {
                 const home = req.routeSrc.type;
                 res.render('Error', { message, home });
             }
+            this.back = () => res.redirect(req.headers.referer || req.headers.host);
+            res.locals.auth = () => res.auth();
             next();
         }
     }
@@ -48,6 +50,12 @@ class BaseController extends GlobalFunctions {
     #auth(role) {
         return (req, res, next) => {
             if (req.session.auth[role].isAuthenticated) {
+                this.log({
+                    url: req.url,
+                    method: req.method,
+                    headers: req.headers,
+                    session: req.session
+                }, 'debug');
                 next();
                 return;
             }

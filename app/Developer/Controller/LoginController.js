@@ -4,7 +4,6 @@ const Controller = require("../Controller");
 class LoginController extends Controller {
     constructor() {
         super();
-        this.set("title", "Login");
         this.initializeRoutes();
     }
 
@@ -15,9 +14,10 @@ class LoginController extends Controller {
     }
 
     getLogin(req, res) {
-        this.set('error', this.flash.read('error'));
-        this.set('old', this.flash.read('old'));
-        this.set('message', this.flash.read('message'));
+        this.set("title", "Login");
+        this.set("error", this.flash.read('error'));
+        this.set("old", this.flash.read('old'));
+        this.set("success", this.flash.read('success'));
         this.render();
     }
     async postLogin(req, res) {
@@ -29,13 +29,13 @@ class LoginController extends Controller {
         if (fail) {
             this.flash.write('error', validate.errors);
             this.flash.write('old', validate.old);
-            return res.redirect(this.auth().guard("developer").redirectFail());
+            return res.redirect(this.auth('developer').redirectFail());
         }
-        let attempt = await this.auth().guard("developer").attempt({ username: req.body.username, password: req.body.password });
+        let attempt = await this.auth('developer').attempt({ username: req.body.username, password: req.body.password });
         if (attempt) {
-            return res.redirect(this.auth().guard("developer").redirectAuth());
+            return res.redirect(this.auth('developer').redirectAuth());
         }
-        return res.redirect(this.auth().guard("developer").redirectFail());
+        return res.redirect(this.auth('developer').redirectFail());
     }
 
     getRouter() {

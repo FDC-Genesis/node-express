@@ -99,6 +99,9 @@ class Router {
             if (!req.session['global_variables']) {
                 req.session['global_variables'] = {};
             }
+            if (!req.session['user']) {
+                req.session['user'] = {};
+            }
             next();
         });
     }
@@ -108,7 +111,6 @@ class Router {
 
         this.app.use((req, res, next) => {
             res.locals.config = (value) => Configure.read(value);
-            res.locals.auth = () => new Auth(req);
             res.auth = () => new Auth(req);
 
             req.uriPath = req.path.split('/');
@@ -153,6 +155,7 @@ class Router {
                         res.status(404)
                     }
                 } else {
+                    if (locals.home === undefined) locals.home = req.routeSrc.type;
                     newView = path.join(__dirname, '..', '..', 'view', 'Error');
                     res.status(404)
                 }

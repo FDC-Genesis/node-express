@@ -9,6 +9,7 @@ class Auth extends BaseAuth {
     #session;
     #req;
     #guardType;
+    #user = {};
     constructor(req) {
         super();
         this.#guarded(Configure.read('auth.default.guard'));
@@ -50,6 +51,8 @@ class Auth extends BaseAuth {
             if (Hash.check(data.password, user.password)) {
                 this.#session.auth[this.#guardType].isAuthenticated = true;
                 this.#session.auth[this.#guardType].id = user.id;
+                delete user.password;
+                this.#session.user[this.#guardType] = user;
                 this.#req.flash('logged', true);
                 return true;
             }
@@ -81,6 +84,9 @@ class Auth extends BaseAuth {
     logout() {
         this.#session.auth[this.#guardType].isAuthenticated = false;
         this.#session.auth[this.#guardType].id = null;
+    }
+    user() {
+        return this.#session.user[this.#guardType];
     }
 }
 

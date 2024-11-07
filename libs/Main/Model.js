@@ -1,7 +1,7 @@
 const Core = require('./Core');
 
 class Model extends Core {
-    constructor(tableName, model) {
+    constructor(tableName) {
         super(tableName);
     }
 
@@ -14,6 +14,14 @@ class Model extends Core {
             [key]: ['=', data]
         };
         return await super.find('first', params);
+    }
+    async findById(id) {
+        let params = {
+            conditions: {
+                [`${this.getModelName()}.id`]: ['=', id]
+            }
+        };
+        return await this.find('first', params);
     }
 }
 

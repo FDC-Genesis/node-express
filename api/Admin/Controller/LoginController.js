@@ -20,7 +20,7 @@ class LoginController extends Controller {
         let fail = validate.fails();
         if (fail) {
             res.status(400).json({
-                status: "error",
+                error: true,
                 message: "Validation failed",
                 data: validate.errors
             });

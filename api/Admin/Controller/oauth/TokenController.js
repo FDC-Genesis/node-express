@@ -14,7 +14,7 @@ class TokenController extends Controller {
 
   async getToken(req, res) {
     let token = await this.getMain().getBearer(this.secretId());
-    res.status(200).json({ token: token });
+    res.status(200).json({ bearer_token: token });
   }
 
   getRouter() {

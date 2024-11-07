@@ -18,7 +18,7 @@ class Core extends GlobalFunctions {
         const conditions = options.conditions || {};
         const builtConditions = this.#buildConditions(conditions);
         this.#values.push(...builtConditions.values);
-        sql += ` ${fields.join(', ')} ` || ' * ';
+        sql += fields.length > 0 ? ` ${fields.join(', ')} ` : ' * ';
         sql += `FROM ${this.tableName} ${builtConditions.sql} LIMIT 1`.trim() + ";";
 
         try {

@@ -1,0 +1,133 @@
+<%- include('../../Defaults/header') %>
+<div class="container my-5">
+    <h1 class="text-center mb-4">API Documentation</h1>
+
+    <div class="alert alert-primary" role="alert">
+        <strong>Entities Available:</strong> <code>admin</code>, <code>developer</code>, <code>user</code>
+    </div>
+
+    <!-- Registration Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Registration</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>POST /api/{entity}/register</code></p>
+            <h5>Body Parameters</h5>
+            <ul>
+                <li><code>username</code> (string) - Required</li>
+                <li><code>email</code> (string) - Required</li>
+                <li><code>password</code> (string) - Required</li>
+                <li><code>password_confirmation</code> (string) - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Returns a token if registration is successful.</p>
+        </div>
+    </div>
+
+    <!-- Login Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Login</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>POST /api/{entity}/login</code></p>
+            <h5>Body Parameters</h5>
+            <ul>
+                <li><code>username</code> (string) - Required</li>
+                <li><code>password</code> (string) - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Returns a token if credentials are valid.</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Dashboard</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>GET /api/{entity}/dashboard</code></p>
+            <h5>Headers</h5>
+            <ul>
+                <li><code>basic_access</code>: token - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Returns a JSON response with <code>client_key</code> and <code>client_secret</code> if the token is valid.</p>
+        </div>
+    </div>
+
+    <!-- Logout Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Logout</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>POST /api/{entity}/logout</code></p>
+            <h5>Headers</h5>
+            <ul>
+                <li><code>basic_access</code>: token - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Revokes the current token and logs the user out.</p>
+        </div>
+    </div>
+
+    <!-- OAuth Token Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>OAuth Token</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>POST /api/{entity}/oauth/token</code></p>
+            <h5>Headers</h5>
+            <ul>
+                <li><code>Authorization</code>: Basic <code>client_secret:client_key</code> (encoded in Base64) - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Returns a bearer token if credentials are valid.</p>
+        </div>
+    </div>
+
+    <!-- OAuth Info Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>OAuth Info</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>GET /api/{entity}/oauth/info</code></p>
+            <h5>Headers</h5>
+            <ul>
+                <li><code>Authorization</code>: Bearer <code>bearertoken</code> - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Returns user information if the bearer token is valid.</p>
+        </div>
+    </div>
+
+    <!-- OAuth Logout Endpoint -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>OAuth Logout</h4>
+        </div>
+        <div class="card-body">
+            <h5>Endpoint</h5>
+            <p><code>POST /api/{entity}/oauth/logout</code></p>
+            <h5>Headers</h5>
+            <ul>
+                <li><code>Authorization</code>: Bearer <code>bearertoken</code> - Required</li>
+            </ul>
+            <h5>Response</h5>
+            <p>Revokes the bearer token and logs the user out.</p>
+        </div>
+    </div>
+
+</div>
+<%- include('../../Defaults/footer') %>

@@ -39,32 +39,40 @@ class Router {
             secret: process.env.MAIN_KEY || 'test-secret',
             resave: false,
             saveUninitialized: false,
-            cookie: { secure: false },
+            cookie: {
+                secure: process.env.NODE_ENV === 'production',
+                httpOnly: true,
+                maxAge: 1000 * 60 * 60 * 24
+            },
         };
 
         if (process.env.NODE_ENV !== 'production') {
-            if (process.env.DATABASE === 'sqlite') {
-                const SessionStore = require('connect-sqlite3')(session);
-                this.store = new SessionStore({
-                    db: path.join('sessions.sqlite'),
-                    dir: path.join(__dirname, '..', '..', 'database'),
-                });
-            } else {
-                const connection = mysql.createConnection({
-                    host: process.env.MYSQL_ADDON_HOST || 'localhost',
-                    user: process.env.MYSQL_ADDON_USER || 'root',
-                    password: process.env.MYSQL_ADDON_PASSWORD || '',
-                    database: process.env.MYSQL_ADDON_DB || 'express',
-                    port: process.env.MYSQL_ADDON_PORT || 3306
-                });
-                const SessionStore = require('express-mysql-session')(session);
-                this.store = new SessionStore({}, connection);
-            }
+            // Development: SQLite session store
+            const SQLiteStore = require('connect-sqlite3')(session);  // Correct usage
+            this.store = new SQLiteStore({
+                db: path.join('sessions.sqlite'),
+                dir: path.join(__dirname, '..', '..', 'database'),
+            });
+        } else {
+            const Redis = require('ioredis');
+
+            const RedisStore = require('connect-redis').default;
+            const redis = new Redis({
+                host: process.env.REDIS_HOST,
+                port: process.env.REDIS_PORT,
+                password: process.env.REDIS_PASSWORD,
+                tls: {},  // Enabling TLS/SSL
+            });
+
+            this.store = new RedisStore({
+                client: redis, // Associating Redis client
+            });
         }
 
-        if (this.store) sessionObj.store = this.store;
-        this.app.use(session(sessionObj));
+        if (this.store) sessionObj.store = this.store;  // Make sure store is set before applying session middleware
+        this.app.use(session(sessionObj));  // Apply session middleware with the store
     }
+
 
     _initializeFlash() {
         this.app.use(flash());

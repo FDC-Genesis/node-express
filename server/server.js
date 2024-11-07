@@ -1,25 +1,26 @@
-class AppController {
-    constructor() {
-        this.app = require('./app');
-        this.setupRoutes();
-    }
+const express = require('express');
+const app = express();
 
-    sendApiResponse(res, message, error = true) {
-        const response = { message, error };
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(response, null, 4));
-    }
+// Function to send API responses
+const sendApiResponse = (res, message, error = true) => {
+    const response = { message, error };
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(response, null, 4));
+};
 
-    setupRoutes() {
-        this.app.use((req, res) => {
-            let [, r] = req.path.split('/');
-            if (r === 'api') {
-                this.sendApiResponse(res, 'Request URL not found');
-            } else {
-                res.status(404).render('Error', { message: 'Page Not Found' });
-            }
-        });
-    }
-}
+// Function to set up routes
+const setupRoutes = () => {
+    app.use((req, res) => {
+        let [, r] = req.path.split('/');
+        if (r === 'api') {
+            sendApiResponse(res, 'Request URL not found');
+        } else {
+            res.status(404).render('Error', { message: 'Page Not Found' });
+        }
+    });
+};
 
-module.exports = new AppController().app;
+// Initialize routes
+setupRoutes();
+
+module.exports = app;

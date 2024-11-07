@@ -1,17 +1,18 @@
-class apiRoutes {
-    constructor() {
-        this.express = require('express');
-        this.router = this.express.Router();
-        this.adminApiRouter = require('../../api/Admin/Route');
-        this.userApiRouter = require('../../api/User/Route');
-        this.developerApiRouter = require('../../api/Developer/Route');
-        this.#initializeRoutes();
-    }
-    #initializeRoutes() {
-        this.router.use('/admin', this.adminApiRouter);
-        this.router.use('/user', this.userApiRouter);
-        this.router.use('/developer', this.developerApiRouter);
-    }
-}
+const express = require('express');
+const adminApiRouter = require('../../api/Admin/Route');
+const userApiRouter = require('../../api/User/Route');
+const developerApiRouter = require('../../api/Developer/Route');
 
-module.exports = new apiRoutes().router;
+const router = express.Router();
+
+// Initialize routes
+const initializeRoutes = () => {
+    router.use('/admin', adminApiRouter);
+    router.use('/user', userApiRouter);
+    router.use('/developer', developerApiRouter);
+};
+
+// Call the initialization function
+initializeRoutes();
+
+module.exports = router;

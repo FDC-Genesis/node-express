@@ -10,190 +10,186 @@ const fs = require('fs');
 const Paginator = require('../../libs/Private/Paginator');
 const Boot = require('../../libs/Service/Boot');
 
-class Router {
-    constructor() {
-        this.app = express();
-        this.sessionStore = null;
-        this.store = null;
-        this.defaultGuard = Configure.read('auth.default.guard');
-        this.defaultPrefix = Configure.read(`auth.providers.${Configure.read(`auth.guards.${this.defaultGuard}.provider`)}.prefix`);
-        this.defaultController = Configure.read('default.prefix_controller');
+const app = express();  // Create an instance of express
+let store = null;  // For storing session data
 
-        this._configureMiddleware();
-        this._initializeSession();
-        this._initializeFlash();
-        this._setViewEngine();
-        Boot.up();
-        this._initializeAuth();
-        this._initializeRoutes();
+const defaultGuard = Configure.read('auth.default.guard');
+const defaultPrefix = Configure.read(`auth.providers.${Configure.read(`auth.guards.${defaultGuard}.provider`)}.prefix`);
+const defaultController = Configure.read('default.prefix_controller');
+
+// Middleware configuration
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '..', '..', 'public')));
+
+// Initialize session store
+const initializeSession = () => {
+    let sessionObj = {
+        secret: process.env.MAIN_KEY || 'test-secret',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24,
+        },
+    };
+
+    if (process.env.NODE_ENV !== 'production') {
+        // Development: SQLite session store
+        const SQLiteStore = require('connect-sqlite3')(session);
+        store = new SQLiteStore({
+            db: path.join('sessions.sqlite'),
+            dir: path.join(__dirname, '..', '..', 'database'),
+        });
+    } else {
+        const Redis = require('ioredis');
+        const RedisStore = require('connect-redis').default;
+        const redis = new Redis({
+            host: process.env.REDIS_HOST,
+            port: process.env.REDIS_PORT,
+            password: process.env.REDIS_PASSWORD,
+            tls: {},  // Enabling TLS/SSL
+        });
+
+        store = new RedisStore({
+            client: redis,
+        });
     }
 
-    _configureMiddleware() {
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({ extended: true }));
-        this.app.use(express.static(path.join(__dirname, '..', '..', 'public')));
-    }
+    if (store) sessionObj.store = store;  // Ensure store is set before applying session middleware
+    app.use(session(sessionObj));  // Apply session middleware with the store
+};
 
-    _initializeSession() {
-        let sessionObj = {
-            secret: process.env.MAIN_KEY || 'test-secret',
-            resave: false,
-            saveUninitialized: false,
-            cookie: {
-                secure: process.env.NODE_ENV === 'production',
-                httpOnly: true,
-                maxAge: 1000 * 60 * 60 * 24
-            },
-        };
+// Initialize flash middleware
+const initializeFlash = () => {
+    app.use(flash());
+};
 
-        if (process.env.NODE_ENV !== 'production') {
-            // Development: SQLite session store
-            const SQLiteStore = require('connect-sqlite3')(session);  // Correct usage
-            this.store = new SQLiteStore({
-                db: path.join('sessions.sqlite'),
-                dir: path.join(__dirname, '..', '..', 'database'),
-            });
-        } else {
-            const Redis = require('ioredis');
-
-            const RedisStore = require('connect-redis').default;
-            const redis = new Redis({
-                host: process.env.REDIS_HOST,
-                port: process.env.REDIS_PORT,
-                password: process.env.REDIS_PASSWORD,
-                tls: {},  // Enabling TLS/SSL
-            });
-
-            this.store = new RedisStore({
-                client: redis, // Associating Redis client
-            });
+// Set view engine and views path
+const setViewEngine = () => {
+    const viewsPath = path.join(__dirname, '..', '..', 'view');
+    app.set('views', viewsPath);
+    app.set('view engine', 'ejs');
+    app.use((req, res, next) => {
+        if (!fs.existsSync(viewsPath)) {
+            return res.status(500).send('View directory not found');
         }
+        next();
+    });
+};
 
-        if (this.store) sessionObj.store = this.store;  // Make sure store is set before applying session middleware
-        this.app.use(session(sessionObj));  // Apply session middleware with the store
-    }
+// Initialize authentication session keys
+const initializeAuth = () => {
+    const guards = Configure.read('auth.guards');
+    const providers = Configure.read('auth.providers');
+    const sessionKeys = Object.keys(guards).filter((ele) => guards[ele].driver === 'session');
 
+    Object.keys(guards).forEach((auth) => {
+        const guard = guards[auth];
+        const provider = providers[guard.provider];
+        if (!provider.prefix) {
+            throw new Error(`Please add prefix in your ${auth}`);
+        }
+    });
 
-    _initializeFlash() {
-        this.app.use(flash());
-    }
-
-    _setViewEngine() {
-        const viewsPath = path.join(__dirname, '..', '..', 'view');
-        this.app.set('views', viewsPath);
-        this.app.set('view engine', 'ejs');
-        this.app.use((req, res, next) => {
-            if (!fs.existsSync(viewsPath)) {
-                return res.status(500).send('View directory not found');
-            }
-            next();
-        });
-    }
-
-    _initializeAuth() {
-        const guards = Configure.read('auth.guards');
-        const providers = Configure.read('auth.providers');
-        const sessionKeys = Object.keys(guards).filter((ele) => guards[ele].driver === 'session');
-
-        Object.keys(guards).forEach((auth) => {
-            const guard = guards[auth];
-            const provider = providers[guard.provider];
-            if (!provider.prefix) {
-                throw new Error(`Please add prefix in your ${auth}`);
+    app.use((req, res, next) => {
+        if (!req.session['auth']) req.session['auth'] = {};
+        sessionKeys.forEach((auth) => {
+            if (!req.session['auth'][auth]) {
+                req.session['auth'][auth] = { isAuthenticated: false, id: null };
             }
         });
+        if (!req.session['global_variables']) {
+            req.session['global_variables'] = {};
+        }
+        if (!req.session['user']) {
+            req.session['user'] = {};
+        }
+        next();
+    });
+};
 
-        this.app.use((req, res, next) => {
-            if (!req.session['auth']) req.session['auth'] = {};
-            sessionKeys.forEach((auth) => {
-                if (!req.session['auth'][auth]) {
-                    req.session['auth'][auth] = { isAuthenticated: false, id: null };
-                }
-            });
-            if (!req.session['global_variables']) {
-                req.session['global_variables'] = {};
-            }
-            if (!req.session['user']) {
-                req.session['user'] = {};
-            }
-            next();
-        });
-    }
+// Initialize routes
+const initializeRoutes = () => {
+    const homeRouter = express.Router();
 
-    _initializeRoutes() {
-        const homeRouter = express.Router();
+    app.use((req, res, next) => {
+        res.locals.config = (value) => Configure.read(value);
+        res.auth = () => new Auth(req);
 
-        this.app.use((req, res, next) => {
-            res.locals.config = (value) => Configure.read(value);
-            res.auth = () => new Auth(req);
+        req.uriPath = req.path.split('/');
+        req.uriPath.shift();
 
-            req.uriPath = req.path.split('/');
-            req.uriPath.shift();
+        const routeSource = Object.keys(Configure.read('auth.guards'));
+        const filteredRouteSource = routeSource.filter(route => route !== defaultGuard);
+        if (!filteredRouteSource.includes(req.uriPath[0])) req.uriPath.unshift(defaultGuard);
 
-            const routeSource = Object.keys(Configure.read('auth.guards'));
-            const filteredRouteSource = routeSource.filter(route => route !== this.defaultGuard);
-            if (!filteredRouteSource.includes(req.uriPath[0])) req.uriPath.unshift(this.defaultGuard);
+        const [type, controller] = req.uriPath;
+        req.routeSrc = { type, controller };
 
-            const [type, controller] = req.uriPath;
-            req.routeSrc = { type, controller };
+        next();
+    });
 
-            next();
-        });
+    app.use(loadPrefixes());
+    app.use(homeRouter);
 
-        this.app.use(this._loadPrefixes());
-        this.app.use(homeRouter);
+    app.use((req, res, next) => {
+        const originalRender = res.render;
 
-        this.app.use((req, res, next) => {
-            const originalRender = res.render;
+        res.render = (view, locals, callback) => {
+            const viewPath = path.join(__dirname, '..', '..', 'view');
 
-            res.render = (view, locals, callback) => {
-                const viewPath = path.join(
-                    __dirname,
-                    '..',
-                    '..',
-                    'view'
-                );
-
-                let newView;
-                if (view !== 'Error') {
-                    newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`;
-                    if (fs.existsSync(path.join(viewPath, `${newView}`))) {
-                        res.status(200);
-                    } else {
-                        locals = { message: 'Page Not Found', home: req.routeSrc.type };
-                        newView = 'Error/index.ejs';
-                        res.status(404);
-                    }
+            let newView;
+            if (view !== 'Error') {
+                newView = `${ucFirst(req.routeSrc.type)}/${ucFirst(req.routeSrc.controller || defaultController)}/${view}.ejs`;
+                if (fs.existsSync(path.join(viewPath, `${newView}`))) {
+                    res.status(200);
                 } else {
-                    if (locals.home === undefined) locals.home = req.routeSrc.type;
+                    locals = { message: 'Page Not Found', home: req.routeSrc.type };
                     newView = 'Error/index.ejs';
                     res.status(404);
                 }
-                if (!res.headersSent) {
-                    return originalRender.call(res, newView, locals, callback);
-                }
-            };
-
-            next();
-        });
-
-
-        this.app.use((req, res, next) => {
-            res.paginator = () => new Paginator(req);
-            next();
-        });
-    }
-
-    _loadPrefixes() {
-        return (req, res, next) => {
-            if (!this.defaultGuard) return res.status(500).send('Default guard not set on config/auth.js');
-            next();
+            } else {
+                if (locals.home === undefined) locals.home = req.routeSrc.type;
+                newView = 'Error/index.ejs';
+                res.status(404);
+            }
+            if (!res.headersSent) {
+                return originalRender.call(res, newView, locals, callback);
+            }
         };
-    }
 
-    _ucFirst(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-}
+        next();
+    });
 
-module.exports = new Router().app;
+    app.use((req, res, next) => {
+        res.paginator = () => new Paginator(req);
+        next();
+    });
+};
+
+// Load prefixes middleware
+const loadPrefixes = () => {
+    return (req, res, next) => {
+        if (!defaultGuard) return res.status(500).send('Default guard not set on config/auth.js');
+        next();
+    };
+};
+
+// Capitalize first letter
+const ucFirst = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+// Boot the application
+Boot.up();
+
+// Initialize all components
+initializeSession();
+initializeFlash();
+setViewEngine();
+initializeAuth();
+initializeRoutes();
+
+module.exports = app;

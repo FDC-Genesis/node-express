@@ -1,0 +1,11 @@
+[build]
+  command = "npm install && npm start"
+
+  # Where to find static files (optional)
+  publish = "public"  # Change this if you have different static directories
+
+[[redirects]]
+  from = "/(.*)"
+  to = "/server/server.js"  # Corrected path to your Express app's entry point
+  status = 200
+  force = true

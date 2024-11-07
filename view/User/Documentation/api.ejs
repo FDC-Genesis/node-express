@@ -13,7 +13,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>POST /api/{entity}/register</code></p>
+            <p><code>POST <%= host %>/api/{entity}/register</code></p>
             <h5>Body Parameters</h5>
             <ul>
                 <li><code>username</code> (string) - Required</li>
@@ -33,7 +33,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>POST /api/{entity}/login</code></p>
+            <p><code>POST <%= host %>/api/{entity}/login</code></p>
             <h5>Body Parameters</h5>
             <ul>
                 <li><code>username</code> (string) - Required</li>
@@ -51,7 +51,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>GET /api/{entity}/dashboard</code></p>
+            <p><code>GET <%= host %>/api/{entity}/dashboard</code></p>
             <h5>Headers</h5>
             <ul>
                 <li><code>basic_access</code>: token - Required</li>
@@ -68,7 +68,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>POST /api/{entity}/logout</code></p>
+            <p><code>POST <%= host %>/api/{entity}/logout</code></p>
             <h5>Headers</h5>
             <ul>
                 <li><code>basic_access</code>: token - Required</li>
@@ -85,7 +85,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>POST /api/{entity}/oauth/token</code></p>
+            <p><code>POST <%= host %>/api/{entity}/oauth/token</code></p>
             <h5>Headers</h5>
             <ul>
                 <li><code>Authorization</code>: Basic <code>client_secret:client_key</code> (encoded in Base64) - Required</li>
@@ -102,7 +102,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>GET /api/{entity}/oauth/info</code></p>
+            <p><code>GET <%= host %>/api/{entity}/oauth/info</code></p>
             <h5>Headers</h5>
             <ul>
                 <li><code>Authorization</code>: Bearer <code>bearertoken</code> - Required</li>
@@ -119,7 +119,7 @@
         </div>
         <div class="card-body">
             <h5>Endpoint</h5>
-            <p><code>POST /api/{entity}/oauth/logout</code></p>
+            <p><code>POST <%= host %>/api/{entity}/oauth/logout</code></p>
             <h5>Headers</h5>
             <ul>
                 <li><code>Authorization</code>: Bearer <code>bearertoken</code> - Required</li>

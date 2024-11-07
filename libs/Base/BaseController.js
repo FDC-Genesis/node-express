@@ -42,6 +42,7 @@ class BaseController extends GlobalFunctions {
             }
             this.back = () => res.redirect(req.headers.referer || req.headers.host);
             res.locals.auth = () => res.auth();
+            res.locals.host = `${req.protocol}://${req.headers.host}`;
             next();
         }
     }
@@ -50,12 +51,7 @@ class BaseController extends GlobalFunctions {
     #auth(role) {
         return (req, res, next) => {
             if (req.session.auth[role].isAuthenticated) {
-                this.log({
-                    url: req.url,
-                    method: req.method,
-                    headers: req.headers,
-                    session: req.session
-                }, 'debug');
+                // this.log(req.protocol, 'debug');
                 next();
                 return;
             }

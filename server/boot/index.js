@@ -164,13 +164,12 @@ class Router {
                         res.status(404)
                     }
                 } else {
-                    res.json('world');
 
                     if (locals.home === undefined) locals.home = req.routeSrc.type;
                     newView = path.join(__dirname, '..', '..', 'view', 'Error');
                     res.status(404)
                 }
-                res.json(newView);
+                return res.json(newView);
 
 
                 originalRender.call(res, newView, locals, callback);

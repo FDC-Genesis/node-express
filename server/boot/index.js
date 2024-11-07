@@ -140,7 +140,7 @@ class Router {
         this.app.use((req, res, next) => {
             const originalRender = res.render;
 
-            res.render = async (view, locals, callback) => {
+            res.render = (view, locals, callback) => {
                 const viewPath = path.join(
                     __dirname,
                     '..',
@@ -153,25 +153,24 @@ class Router {
 
                 let newView;
                 if (view !== 'Error') {
-                    res.json('hello');
-                    try {
-                        await fs.promises.access(viewPath);
-                        newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}`;
-                        res.status(200);
-                    } catch {
-                        locals = { message: 'Page Not Found', home: req.routeSrc.type };
-                        newView = path.join(__dirname, '..', '..', 'view', 'Error');
-                        res.status(404)
-                    }
-                } else {
-                    res.json('world');
+                    fs.access(viewPath, fs.constants.F_OK, (err) => {
+                        if (err) {
+                            locals = { message: 'Page Not Found', home: req.routeSrc.type };
+                            newView = path.join(__dirname, '..', '..', 'view', 'Error');
+                            res.status(404);
+                        } else {
+                            newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}`;
+                            res.status(200);
+                        }
 
+                        originalRender.call(res, newView, locals, callback);
+                    });
+                } else {
                     if (locals.home === undefined) locals.home = req.routeSrc.type;
                     newView = path.join(__dirname, '..', '..', 'view', 'Error');
-                    res.status(404)
+                    res.status(404);
+                    originalRender.call(res, newView, locals, callback);
                 }
-
-                originalRender.call(res, newView, locals, callback);
             };
 
             next();

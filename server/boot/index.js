@@ -80,8 +80,6 @@ class Router {
 
     _setViewEngine() {
         const viewsPath = path.resolve(__dirname, '../../view');
-        this.app.set('views', viewsPath);
-        this.app.set('view engine', 'ejs');
         this.app.use((req, res, next) => {
             if (!fs.existsSync(viewsPath)) {
                 return res.status(500).send('View directory not found');
@@ -153,6 +151,8 @@ class Router {
                     '..',
                     'view'
                 );
+                this.app.set('views', viewPath);
+                this.app.set('view engine', 'ejs');
 
                 let newView;
                 if (view !== 'Error') {

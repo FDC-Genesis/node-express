@@ -9,6 +9,9 @@
     "start": "node ./server/server.js",
     "devStart": "nodemon --no-deprecation ./server/run-server"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -13,6 +13,7 @@ const Boot = require('../../libs/Service/Boot');
 class Router {
     constructor() {
         this.app = express();
+        this._setViewEngine();
         this.sessionStore = null;
         this.store = null;
         this.defaultGuard = Configure.read('auth.default.guard');
@@ -22,7 +23,6 @@ class Router {
         this._configureMiddleware();
         this._initializeSession();
         this._initializeFlash();
-        this._setViewEngine();
         Boot.up();
         this._initializeAuth();
         this._initializeRoutes();
@@ -154,28 +154,24 @@ class Router {
                     'view'
                 );
 
-                res.json({
-                    'viewpath': `${viewPath}/${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`,
-                    'error': `${viewPath}/Error/index.ejs`,
-                });
-                return;
-
-                // let newView;
-                // if (view !== 'Error') {
-                //     newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`;
-                //     if (fs.existsSync(path.join(viewPath, `${newView}`))) {
-                //         res.status(200);
-                //     } else {
-                //         locals = { message: 'Page Not Found', home: req.routeSrc.type };
-                //         newView = 'Error/index.ejs';
-                //         res.status(404);
-                //     }
-                // } else {
-                //     if (locals.home === undefined) locals.home = req.routeSrc.type;
-                //     newView = 'Error/index.ejs';
-                //     res.status(404);
-                // }
-                // return originalRender.call(res, newView, locals, callback);
+                let newView;
+                if (view !== 'Error') {
+                    newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`;
+                    if (fs.existsSync(path.join(viewPath, `${newView}`))) {
+                        res.status(200);
+                    } else {
+                        locals = { message: 'Page Not Found', home: req.routeSrc.type };
+                        newView = 'Error/index.ejs';
+                        res.status(404);
+                    }
+                } else {
+                    if (locals.home === undefined) locals.home = req.routeSrc.type;
+                    newView = 'Error/index.ejs';
+                    res.status(404);
+                }
+                if (!res.headersSent) {
+                    return originalRender.call(res, newView, locals, callback);
+                }
             };
 
             next();

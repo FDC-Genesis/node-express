@@ -13,7 +13,6 @@ const Boot = require('../../libs/Service/Boot');
 class Router {
     constructor() {
         this.app = express();
-        this._setViewEngine();
         this.sessionStore = null;
         this.store = null;
         this.defaultGuard = Configure.read('auth.default.guard');
@@ -23,6 +22,7 @@ class Router {
         this._configureMiddleware();
         this._initializeSession();
         this._initializeFlash();
+        this._setViewEngine();
         Boot.up();
         this._initializeAuth();
         this._initializeRoutes();
@@ -79,7 +79,7 @@ class Router {
     }
 
     _setViewEngine() {
-        const viewsPath = path.resolve(__dirname, '../../view');
+        const viewsPath = path.join(__dirname, '..', '..', 'view');
         this.app.set('views', viewsPath);
         this.app.set('view engine', 'ejs');
         this.app.use((req, res, next) => {

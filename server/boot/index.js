@@ -150,20 +150,20 @@ class Router {
 
                 let newView;
                 if (view !== 'Error') {
-                    newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}`;
-                    if (fs.existsSync(path.join(viewPath, `${newView}.ejs`))) {
+                    newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`;
+                    if (fs.existsSync(path.join(viewPath, `${newView}`))) {
                         res.status(200);
                     } else {
                         locals = { message: 'Page Not Found', home: req.routeSrc.type };
-                        newView = 'Error';
+                        newView = 'Error/index.ejs';
                         res.status(404);
                     }
                 } else {
                     if (locals.home === undefined) locals.home = req.routeSrc.type;
-                    newView = 'Error';
+                    newView = 'Error/index.ejs';
                     res.status(404);
                 }
-                return res.json(fs.existsSync(path.join(viewPath, `${newView}.ejs`)))
+                // return res.json(fs.existsSync(path.join(viewPath, `${newView}.ejs`)))
                 originalRender.call(res, newView, locals, callback);
             };
 

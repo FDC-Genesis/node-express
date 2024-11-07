@@ -152,18 +152,18 @@ class Router {
                 if (view !== 'Error') {
                     newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}`;
                     if (fs.existsSync(path.join(viewPath, `${newView}.ejs`))) {
-                        res.status(200);
+                        res.json('hello');
                     } else {
                         locals = { message: 'Page Not Found', home: req.routeSrc.type };
                         newView = 'Error';
-                        res.status(404);
+                        res.json('world');
                     }
                 } else {
                     if (locals.home === undefined) locals.home = req.routeSrc.type;
                     newView = 'Error';
-                    res.status(404);
+                    res.json('monique');
                 }
-
+                return;
                 originalRender.call(res, newView, locals, callback);
             };
 

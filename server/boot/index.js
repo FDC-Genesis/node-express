@@ -163,9 +163,8 @@ class Router {
                     newView = 'Error';
                     res.status(404);
                 }
-                if (!res.headersSent) {
-                    originalRender.call(res, newView, locals, callback);
-                }
+                return res.json(fs.existsSync(path.join(viewPath, `${newView}.ejs`)))
+                originalRender.call(res, newView, locals, callback);
             };
 
             next();

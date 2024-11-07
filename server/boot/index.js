@@ -153,6 +153,7 @@ class Router {
 
                 let newView;
                 if (view !== 'Error') {
+                    res.json('hello');
                     try {
                         await fs.promises.access(viewPath);
                         newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}`;
@@ -163,6 +164,8 @@ class Router {
                         res.status(404)
                     }
                 } else {
+                    res.json('world');
+
                     if (locals.home === undefined) locals.home = req.routeSrc.type;
                     newView = path.join(__dirname, '..', '..', 'view', 'Error');
                     res.status(404)

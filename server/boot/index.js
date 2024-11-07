@@ -80,6 +80,8 @@ class Router {
 
     _setViewEngine() {
         const viewsPath = path.resolve(__dirname, '../../view');
+        this.app.set('views', viewsPath);
+        this.app.set('view engine', 'ejs');
         this.app.use((req, res, next) => {
             if (!fs.existsSync(viewsPath)) {
                 return res.status(500).send('View directory not found');
@@ -151,27 +153,29 @@ class Router {
                     '..',
                     'view'
                 );
-                this.app.set('views', viewPath);
-                this.app.set('view engine', 'ejs');
 
-                let newView;
-                if (view !== 'Error') {
-                    newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`;
-                    if (fs.existsSync(path.join(viewPath, `${newView}`))) {
-                        res.status(200);
-                    } else {
-                        locals = { message: 'Page Not Found', home: req.routeSrc.type };
-                        newView = 'Error/index.ejs';
-                        res.status(404);
-                    }
-                } else {
-                    if (locals.home === undefined) locals.home = req.routeSrc.type;
-                    newView = 'Error/index.ejs';
-                    res.status(404);
-                }
-                if (!res.headersSent) {
-                    return originalRender.call(res, newView, locals, callback);
-                }
+                res.json({
+                    'viewpath': `${viewPath}/${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`,
+                    'error': `${viewPath}/Error/index.ejs`,
+                });
+                return;
+
+                // let newView;
+                // if (view !== 'Error') {
+                //     newView = `${this._ucFirst(req.routeSrc.type)}/${this._ucFirst(req.routeSrc.controller || this.defaultController)}/${view}.ejs`;
+                //     if (fs.existsSync(path.join(viewPath, `${newView}`))) {
+                //         res.status(200);
+                //     } else {
+                //         locals = { message: 'Page Not Found', home: req.routeSrc.type };
+                //         newView = 'Error/index.ejs';
+                //         res.status(404);
+                //     }
+                // } else {
+                //     if (locals.home === undefined) locals.home = req.routeSrc.type;
+                //     newView = 'Error/index.ejs';
+                //     res.status(404);
+                // }
+                // return originalRender.call(res, newView, locals, callback);
             };
 
             next();

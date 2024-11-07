@@ -39,27 +39,25 @@ class Router {
             secret: process.env.MAIN_KEY || 'test-secret',
             resave: false,
             saveUninitialized: false,
-            cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 },
+            cookie: { secure: false },
         };
 
-        if (process.env.NODE_ENV !== 'production') {
-            if (process.env.DATABASE === 'sqlite') {
-                const SessionStore = require('connect-sqlite3')(session);
-                this.store = new SessionStore({
-                    db: path.join('sessions.sqlite'),
-                    dir: path.join(__dirname, '..', '..', 'database'),
-                });
-            } else {
-                const connection = mysql.createConnection({
-                    host: process.env.MYSQL_ADDON_HOST || 'localhost',
-                    user: process.env.MYSQL_ADDON_USER || 'root',
-                    password: process.env.MYSQL_ADDON_PASSWORD || '',
-                    database: process.env.MYSQL_ADDON_DB || 'express',
-                    port: process.env.MYSQL_ADDON_PORT || 3306
-                });
-                const SessionStore = require('express-mysql-session')(session);
-                this.store = new SessionStore({}, connection);
-            }
+        if (process.env.DATABASE === 'sqlite') {
+            const SessionStore = require('connect-sqlite3')(session);
+            this.store = new SessionStore({
+                db: path.join('sessions.sqlite'),
+                dir: path.join(__dirname, '..', '..', 'database'),
+            });
+        } else {
+            const connection = mysql.createConnection({
+                host: process.env.MYSQL_ADDON_HOST || 'localhost',
+                user: process.env.MYSQL_ADDON_USER || 'root',
+                password: process.env.MYSQL_ADDON_PASSWORD || '',
+                database: process.env.MYSQL_ADDON_DB || 'express',
+                port: process.env.MYSQL_ADDON_PORT || 3306
+            });
+            const SessionStore = require('express-mysql-session')(session);
+            this.store = new SessionStore({}, connection);
         }
 
         if (this.store) sessionObj.store = this.store;

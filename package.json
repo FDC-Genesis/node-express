@@ -1,10 +1,11 @@
 {
   "name": "first-project",
   "version": "1.0.0",
-  "description": "",
+  "description": "express",
   "main": "./server/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "npm install ejs",
     "start": "node ./server/server.js",
     "devStart": "nodemon --no-deprecation ./server/run-server"
   },

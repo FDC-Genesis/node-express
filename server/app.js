@@ -18,6 +18,7 @@ class App {
             if (process.env.SESSION_DEBUG === 'true') {
                 return res.send(req.session.auth);
             }
+            return res.send('Debug mode is disabled');
         });
     }
 }

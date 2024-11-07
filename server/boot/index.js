@@ -169,7 +169,9 @@ class Router {
                     newView = 'Error/index.ejs';
                     res.status(404);
                 }
-                originalRender.call(res, newView, locals, callback);
+                if (!res.headersSent) {
+                    return originalRender.call(res, newView, locals, callback);
+                }
             };
 
             next();

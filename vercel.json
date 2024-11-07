@@ -15,5 +15,8 @@
     { "src": "/admin/(.*)", "dest": "server/server.js" },
     { "src": "/developer/(.*)", "dest": "server/server.js" },
     { "src": "/(.*)", "dest": "server/server.js" }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

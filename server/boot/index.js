@@ -82,6 +82,12 @@ class Router {
         const viewsPath = path.resolve(__dirname, '../../view');
         this.app.set('views', viewsPath);
         this.app.set('view engine', 'ejs');
+        this.app.use((req, res, next) => {
+            if (!fs.existsSync(viewsPath)) {
+                return res.status(500).send('View directory not found');
+            }
+            next();
+        });
     }
 
     _initializeAuth() {
@@ -163,7 +169,6 @@ class Router {
                     newView = 'Error/index.ejs';
                     res.status(404);
                 }
-                // return res.json(fs.existsSync(path.join(viewPath, `${newView}.ejs`)))
                 originalRender.call(res, newView, locals, callback);
             };
 

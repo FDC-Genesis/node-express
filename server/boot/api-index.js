@@ -5,14 +5,9 @@ const developerApiRouter = require('../../api/Developer/Route');
 
 const router = express.Router();
 
-// Initialize routes
-const initializeRoutes = () => {
-    router.use('/admin', adminApiRouter);
-    router.use('/user', userApiRouter);
-    router.use('/developer', developerApiRouter);
-};
-
-// Call the initialization function
-initializeRoutes();
+// Set up routes
+router.use('/admin', adminApiRouter);
+router.use('/user', userApiRouter);
+router.use('/developer', developerApiRouter);
 
 module.exports = router;

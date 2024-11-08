@@ -213,10 +213,6 @@ async function migrate() {
             const filePath = path.join(migrationDir, file);
             try {
                 const { stdout, stderr } = await execPromise(`node ${filePath}`);
-                if (stderr) {
-                    console.error(`Error in migration ${file}: ${stderr}`);
-                    return; // Stop execution on error
-                }
                 console.log(`Migration ${file} executed successfully:\n${stdout}`);
             } catch (error) {
                 console.error(`Error executing migration ${file}: ${error.message}`);

@@ -10,16 +10,18 @@ class Auth extends BaseAuth {
     #req;
     #res;
     #guardType;
+    #authCookie;
+    #currentCookie;
     #user = {};
-    constructor() {
-        super(Configure.read('app'));
-    }
-    init(req, res) {
-        this.guard(Configure.read('auth.default.guard'));
+    constructor(req, res) {
+        super();
         this.#req = req;
         this.#res = res;
         this.#session = this.#req.session;
-        return this;
+        this.#authCookie = req.cookies.auth ? JSON.parse(req.cookies.auth) : Configure.read('app');
+        this.#guarded(Configure.read('auth.default.guard'));
+    }
+    init(req, res) {
     }
     guard(type) {
         if (this.#guardType !== type.toLowerCase()) {
@@ -33,6 +35,7 @@ class Auth extends BaseAuth {
             throw new Error(`Please register ${type} first in config/auth.js in guards`);
         }
         this.#guardType = type.toLowerCase();
+        this.#currentCookie = this.#authCookie[this.#guardType];
         this.provider = Configure.read('auth.providers')[Configure.read(`auth.guards.${this.#guardType}.provider`)];
     }
     async attempt(data) {
@@ -85,11 +88,11 @@ class Auth extends BaseAuth {
         return this.provider.failed;
     }
     check() {
-        return this.currentCookie[this.#guardType].isAuthenticated;
+        return this.#currentCookie.isAuthenticated;
     }
     id() {
         if (this.check()) {
-            return this.currentCookie[this.#guardType].id;
+            return this.#currentCookie.id;
         }
     }
     logout() {
@@ -104,7 +107,7 @@ class Auth extends BaseAuth {
     }
     user() {
         if (this.check()) {
-            return this.currentCookie[this.#guardType].user;
+            return this.#currentCookie.user;
         }
     }
 
@@ -117,4 +120,4 @@ class Auth extends BaseAuth {
     }
 }
 
-module.exports = new Auth();
+module.exports = Auth;

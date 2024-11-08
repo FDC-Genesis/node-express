@@ -4,11 +4,7 @@ class BaseAuth {
     provider;
     #forFind;
     #model;
-    currentCookie;
-    constructor(app) {
-        if (this.currentCookie === undefined) {
-            this.currentCookie = app;
-        }
+    constructor() {
     }
 
     async attempt(params) {

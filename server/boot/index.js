@@ -24,6 +24,41 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 const viewsPath = path.join(__dirname, '..', '..', 'view');
 
+
+
+let store = null;
+
+if (process.env.NODE_ENV === 'production') {
+    store = Configure.read(`session.${process.env.SESSION_STORE}`)();
+} else {
+    const SQLiteStore = require('connect-sqlite3')(session);
+    store = new SQLiteStore({
+        dir: path.join(__dirname, '..', '..', 'database', 'sessions'),
+        db: 'sessions.sqlite',
+        table: 'sessions',
+        ttl: 86400,
+    });
+}
+
+const sessionObj = {
+    secret: process.env.MAIN_KEY || 'test-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    },
+};
+
+if (store) {
+    sessionObj.store = store;
+}
+app.use(session(sessionObj));
+
+app.use(flash());
+
+app.use(csrf);
 app.use((req, res, next) => {
     if (!req.session) {
         req.session = {};
@@ -53,42 +88,6 @@ app.use((req, res, next) => {
 
     next();
 });
-
-let store = null;
-
-if (process.env.NODE_ENV === 'production') {
-    store = Configure.read(`session.${process.env.SESSION_STORE}`)();
-} else {
-    const SQLiteStore = require('connect-sqlite3')(session);
-    store = new SQLiteStore({
-        dir: path.join(__dirname, '..', '..', 'database', 'sessions'),
-        db: 'sessions.sqlite',
-        table: 'sessions',
-        ttl: 86400,
-    });
-}
-
-const sessionObj = {
-    secret: process.env.MAIN_KEY || 'test-secret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    },
-};
-
-if (store) {
-    sessionObj.store = store;
-}
-app.use(session(sessionObj));
-
-// Flash messages
-app.use(flash());
-
-app.use(csrf);
-
 app.use((req, res, next) => {
     if (!fs.existsSync(viewsPath)) {
         return res.status(500).send('View directory not found');
@@ -102,9 +101,9 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     res.locals.config = (value) => Configure.read(value);
     if (typeof res.auth !== 'undefined' || typeof res.auth !== 'function') {
-        res.auth = () => Auth.init(req, res);
+        res.auth = () => new Auth(req, res);
     }
-    res.locals.auth = (guard = Configure.read('auth.default.guard')) => res.auth().guard(guard);
+    res.locals.auth = () => res.auth();
     req.uriPath = req.path.split('/');
     req.uriPath.shift();
 

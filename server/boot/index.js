@@ -43,7 +43,7 @@ if (process.env.NODE_ENV === 'production') {
 const sessionObj = {
     secret: process.env.MAIN_KEY || 'test-secret',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
@@ -55,16 +55,11 @@ if (store) {
     sessionObj.store = store;
 }
 app.use(session(sessionObj));
-
 app.use(flash());
-
 app.use(csrf);
 app.use((req, res, next) => {
     if (!req.session) {
         req.session = {};
-    }
-    if (!req.session.flash) {
-        req.session.flash = {};
     }
     if (!req.session['auth']) {
         req.session['auth'] = {};
@@ -88,6 +83,7 @@ app.use((req, res, next) => {
 
     next();
 });
+
 app.use((req, res, next) => {
     if (!fs.existsSync(viewsPath)) {
         return res.status(500).send('View directory not found');

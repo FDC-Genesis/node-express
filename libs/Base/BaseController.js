@@ -41,7 +41,6 @@ class BaseController extends GlobalFunctions {
                 res.render('Error', { message, home });
             }
             this.back = () => res.redirect(req.headers.referer || req.headers.host);
-            res.locals.auth = () => res.auth();
             res.locals.host = `${req.protocol}://${req.headers.host}`;
             next();
         }

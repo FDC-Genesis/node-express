@@ -17,47 +17,12 @@ const csrf = require('../../libs/Middleware/Csrf');
 Boot.up();
 
 const app = express();
-let store = null;
 
-if (process.env.NODE_ENV === 'production') {
-    store = Configure.read(`session.${process.env.SESSION_STORE}`)();
-} else {
-    const SQLiteStore = require('connect-sqlite3')(session);
-    store = new SQLiteStore({
-        dir: path.join(__dirname, '..', '..', 'database', 'sessions'),
-        db: 'sessions.sqlite',
-        table: 'sessions',
-        ttl: 86400,
-    });
-}
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
-
-const sessionObj = {
-    secret: process.env.MAIN_KEY || 'test-secret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    },
-};
-
-if (store) {
-    sessionObj.store = store;
-}
-app.use(session(sessionObj));
-
-// Flash messages
-app.use(flash());
-
-// View engine setup (EJS)
 const viewsPath = path.join(__dirname, '..', '..', 'view');
-app.set('views', viewsPath);
-app.set('view engine', 'ejs');
 
 app.use((req, res, next) => {
     if (!req.session) {
@@ -89,12 +54,47 @@ app.use((req, res, next) => {
     next();
 });
 
+let store = null;
+
+if (process.env.NODE_ENV === 'production') {
+    store = Configure.read(`session.${process.env.SESSION_STORE}`)();
+} else {
+    const SQLiteStore = require('connect-sqlite3')(session);
+    store = new SQLiteStore({
+        dir: path.join(__dirname, '..', '..', 'database', 'sessions'),
+        db: 'sessions.sqlite',
+        table: 'sessions',
+        ttl: 86400,
+    });
+}
+
+const sessionObj = {
+    secret: process.env.MAIN_KEY || 'test-secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    },
+};
+
+if (store) {
+    sessionObj.store = store;
+}
+app.use(session(sessionObj));
+
+// Flash messages
+app.use(flash());
+
 app.use(csrf);
-// Ensure view directory exists before using it
+
 app.use((req, res, next) => {
     if (!fs.existsSync(viewsPath)) {
         return res.status(500).send('View directory not found');
     }
+    app.set('views', viewsPath);
+    app.set('view engine', 'ejs');
     next();
 });
 

@@ -13,9 +13,9 @@ class Auth extends BaseAuth {
     #user = {};
     constructor(req, res) {
         super();
-        this.#guarded(Configure.read('auth.default.guard'));
+        this.guard(Configure.read('auth.default.guard'));
         this.#req = req;
-        this.currentCookie = JSON.parse(req.cookies.auth);
+        this.currentCookie = typeof req.cookies.auth !== 'undefined' ? JSON.parse(req.cookies.auth) : Configure.read('app');
         this.#res = res;
         this.#session = this.#req.session;
     }

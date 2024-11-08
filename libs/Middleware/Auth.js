@@ -12,16 +12,16 @@ class Auth extends BaseAuth {
     #guardType;
     #user = {};
     constructor(req, res) {
-        super();
+        super(Configure.read('app'));
         this.guard(Configure.read('auth.default.guard'));
         this.#req = req;
-        this.currentCookie = this.#req.cookies.auth ? this.#safeParse(this.#req.cookies.auth) : Configure.read('app');
         this.#res = res;
         this.#session = this.#req.session;
     }
     guard(type) {
         if (this.#guardType !== type.toLowerCase()) {
             this.#guarded(type);
+
         }
         return this;
     }

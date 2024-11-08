@@ -49,7 +49,7 @@ class RegisterController extends Controller {
         content: "This is an example mailer."
       });
       this.flash.write('success', `Developer created successfully.`);
-      return res.redirect(this.guard('developer').redirectFail());
+      return res.redirect(this.auth('developer').redirectFail());
     }
     return res.redirect('/developer/register');
   }

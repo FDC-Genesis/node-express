@@ -24,10 +24,10 @@ if (process.env.NODE_ENV === 'production') {
 } else {
     const SQLiteStore = require('connect-sqlite3')(session);
     store = new SQLiteStore({
-        dir: path.join(__dirname, '..', '..', 'database', 'sessions'), // Directory for the SQLite database file
-        db: 'sessions.sqlite', // SQLite database file name
-        table: 'sessions', // Table name for session storage
-        ttl: 86400, // Time-to-live in seconds (1 day)
+        dir: path.join(__dirname, '..', '..', 'database', 'sessions'),
+        db: 'sessions.sqlite',
+        table: 'sessions',
+        ttl: 86400,
     });
 }
 app.use(cookieParser());
@@ -38,11 +38,11 @@ app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 const sessionObj = {
     secret: process.env.MAIN_KEY || 'test-secret',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24 * 7
     },
 };
 
@@ -60,25 +60,19 @@ app.set('views', viewsPath);
 app.set('view engine', 'ejs');
 
 app.use((req, res, next) => {
+    if (!req.session) {
+        req.session = {};
+    }
+    if (!req.session.flash) {
+        req.session.flash = {};
+    }
     if (!req.session['auth']) {
         req.session['auth'] = {};
+        req.session['auth'] = Configure.read('app');
     }
 
-    const sessionKeys = Object.keys(guards).filter((ele) => guards[ele].driver === 'session');
-    sessionKeys.forEach((auth) => {
-        if (!req.session['auth'][auth]) {
-            req.session['auth'][auth] = { isAuthenticated: false, id: null };
-        }
-    });
-
     if (!req.cookies['auth']) {
-        const authData = {};
-
-        sessionKeys.forEach((auth) => {
-            authData[auth] = { isAuthenticated: false, id: null, user: null };
-        });
-
-        res.cookie('auth', JSON.stringify(authData), {
+        res.cookie('auth', JSON.stringify(Configure.read('app')), {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24,
             secure: process.env.NODE_ENV === 'production',
@@ -92,12 +86,9 @@ app.use((req, res, next) => {
         req.session['global_variables'] = {};
     }
 
-    if (!req.session['user']) {
-        req.session['user'] = {};
-    }
-
     next();
 });
+
 app.use(csrf);
 // Ensure view directory exists before using it
 app.use((req, res, next) => {

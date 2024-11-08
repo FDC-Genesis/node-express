@@ -17,11 +17,11 @@ class DatabaseConnection {
             this.connection = new Database(dbPath);
         } else {
             this.connection = mysql.createConnection({
-                host: process.env.MYSQL_ADDON_HOST || 'localhost',
-                user: process.env.MYSQL_ADDON_USER || 'root',
-                password: process.env.MYSQL_ADDON_PASSWORD || '',
-                database: process.env.MYSQL_ADDON_DB || 'express',
-                port: process.env.MYSQL_ADDON_PORT || 3306
+                host: process.env.MYSQL_HOST || 'localhost',
+                user: process.env.MYSQL_USER || 'root',
+                password: process.env.MYSQL_PASSWORD || '',
+                database: process.env.MYSQL_DB || 'express',
+                port: process.env.MYSQL_PORT || 3306
             });
 
             this.connection.connect((err) => {

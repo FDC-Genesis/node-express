@@ -4,7 +4,8 @@
 2. cd node-express-mvc
 3. npm install
 4. rename .env.example into .env
-5. npm run devStart //for development
+5. node kira migrate
+6. npm run devStart //for development
 
 ## Same Like Laravel Commands
 ### Create Model

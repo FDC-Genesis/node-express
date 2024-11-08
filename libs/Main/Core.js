@@ -19,6 +19,7 @@ class Core extends GlobalFunctions {
         let sql = `SELECT `;
         const {
             conditions = {},
+            orConditions = {},
             joins = [],
             fields = [],
             group = [],
@@ -28,28 +29,41 @@ class Core extends GlobalFunctions {
         const limitAndOffset = this.#buildLimitOffset(options);
         const builtJoins = this.#buildJoins(joins);
         const builtConditions = this.#buildConditions(conditions);
-        this.#values.push(...builtConditions.values);
+        const builtOrConditions = this.#buildOrConditions(orConditions);
+
+        // Merge values from both conditions
+        this.#values.push(...builtConditions.values, ...builtOrConditions.values);
 
         const selectedFields = fields.length > 0 ? fields : [`${this.#modelName}.*`, ...builtJoins.mixedTable];
 
         const sqlJoin = builtJoins.sql ? ` ${builtJoins.sql.trim()}` : '';
-        const sqlConditions = builtConditions.sql ? ` ${builtConditions.sql.trim()}` : '';
+        const sqlConditions = builtConditions.sql;
+        const sqlOrConditions = builtOrConditions.sql;
+
+        let whereClause = '';
+        if (sqlConditions || sqlOrConditions) {
+            whereClause = 'WHERE';
+            if (sqlConditions) whereClause += ` (${sqlConditions})`;
+            if (sqlOrConditions) whereClause += (sqlConditions ? ' AND ' : ' ') + `(${sqlOrConditions})`;
+        }
+
         const sqlGroup = this.#buildGroup(group) ? ` ${this.#buildGroup(group).trim()}` : '';
         const sqlOrder = this.#buildOrder(order) ? ` ${this.#buildOrder(order).trim()}` : '';
         const sqlLAO = limitAndOffset ? ` ${limitAndOffset.trim()}` : '';
+
         // Building SQL query based on type
         switch (type) {
             case 'count':
-                sql += `COUNT(*) as count FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup};`;
+                sql += `COUNT(*) as count FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${whereClause}${sqlGroup};`;
                 break;
             case 'all':
-                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup}${sqlOrder}${sqlLAO};`;
+                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${whereClause}${sqlGroup}${sqlOrder}${sqlLAO};`;
                 break;
             case 'first':
-                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup}${sqlOrder} LIMIT 1;`;
+                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${whereClause}${sqlGroup}${sqlOrder} LIMIT 1;`;
                 break;
             case 'list':
-                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${sqlConditions}${sqlGroup}${sqlOrder}${sqlLAO};`;
+                sql += `${selectedFields.join(', ')} FROM ${this.tableName} AS ${this.#modelName}${sqlJoin}${whereClause}${sqlGroup}${sqlOrder}${sqlLAO};`;
                 break;
             default:
                 throw new Error(`Unsupported find type: ${type}`);
@@ -170,7 +184,50 @@ class Core extends GlobalFunctions {
         });
 
         return {
-            sql: sqlConditions.length > 0 ? `WHERE ${sqlConditions.join(' AND ')}` : '',
+            sql: sqlConditions.join(' AND '),
+            values,
+        };
+    }
+
+    #buildOrConditions(orConditions = {}) {
+        let sqlConditions = [];
+        let values = [];
+
+        Object.entries(orConditions).forEach(([key, condition]) => {
+            const [operator, conditionValue] = condition;
+
+            switch (operator.toUpperCase()) {
+                case 'IS':
+                    sqlConditions.push(`${key} IS ${conditionValue}`);
+                    break;
+                case 'IN':
+                    const placeholders = conditionValue.map(() => '?').join(', ');
+                    sqlConditions.push(`${key} IN (${placeholders})`);
+                    values.push(...conditionValue);
+                    break;
+                case 'BETWEEN':
+                    const [lowerBound, upperBound] = conditionValue;
+                    sqlConditions.push(`${key} BETWEEN ? AND ?`);
+                    values.push(lowerBound, upperBound);
+                    break;
+                case 'LIKE':
+                case 'NOT LIKE':
+                case '=':
+                case '!=':
+                case '>=':
+                case '<=':
+                case '>':
+                case '<':
+                    sqlConditions.push(`${key} ${operator} ?`);
+                    values.push(conditionValue);
+                    break;
+                default:
+                    throw new Error(`Unsupported operator: ${operator}`);
+            }
+        });
+
+        return {
+            sql: sqlConditions.join(' OR '),
             values,
         };
     }
@@ -301,6 +358,10 @@ class Core extends GlobalFunctions {
         }
     }
 
+    async select(sql, values = []) {
+        const data = await this.db.runQuery(sql, values);
+        return data;
+    }
 }
 
 module.exports = Core;

@@ -101,7 +101,10 @@ app.use((req, res, next) => {
 // Route middleware to check and setup route variables
 app.use((req, res, next) => {
     res.locals.config = (value) => Configure.read(value);
-    res.auth = () => new Auth(req, res);
+    if (typeof res.auth !== 'undefined' || typeof res.auth !== 'function') {
+        res.auth = () => Auth.init(req, res);
+    }
+    res.locals.auth = (guard = Configure.read('auth.default.guard')) => res.auth().guard(guard);
     req.uriPath = req.path.split('/');
     req.uriPath.shift();
 

@@ -11,12 +11,15 @@ class Auth extends BaseAuth {
     #res;
     #guardType;
     #user = {};
-    constructor(req, res) {
+    constructor() {
         super(Configure.read('app'));
+    }
+    init(req, res) {
         this.guard(Configure.read('auth.default.guard'));
         this.#req = req;
         this.#res = res;
         this.#session = this.#req.session;
+        return this;
     }
     guard(type) {
         if (this.#guardType !== type.toLowerCase()) {
@@ -114,4 +117,4 @@ class Auth extends BaseAuth {
     }
 }
 
-module.exports = Auth;
+module.exports = new Auth();

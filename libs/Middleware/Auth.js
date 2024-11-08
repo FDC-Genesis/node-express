@@ -8,12 +8,15 @@ function ucFirst(string) {
 class Auth extends BaseAuth {
     #session;
     #req;
+    #res;
     #guardType;
     #user = {};
-    constructor(req) {
+    constructor(req, res) {
         super();
         this.#guarded(Configure.read('auth.default.guard'));
         this.#req = req;
+        this.currentCookie = JSON.parse(req.cookies.auth);
+        this.#res = res;
         this.#session = this.#req.session;
     }
     guard(type) {
@@ -49,10 +52,16 @@ class Auth extends BaseAuth {
                 return false;
             }
             if (Hash.check(data.password, user.password)) {
-                this.#session.auth[this.#guardType].isAuthenticated = true;
-                this.#session.auth[this.#guardType].id = user.id;
                 delete user.password;
-                this.#session.user[this.#guardType] = user;
+                let authCookie = JSON.parse(this.#req.cookies.auth);
+                authCookie[this.#guardType].isAuthenticated = true;
+                authCookie[this.#guardType].id = user.id;
+                authCookie[this.#guardType].user = user;
+                this.#res.cookie('auth', JSON.stringify(authCookie), {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: 1000 * 60 * 60 * 24
+                });
                 this.#req.flash('logged', true);
                 return true;
             }
@@ -73,20 +82,27 @@ class Auth extends BaseAuth {
         return this.provider.failed;
     }
     check() {
-        return typeof this.#session.auth[this.#guardType].isAuthenticated !== 'undefined' && this.#session.auth[this.#guardType].isAuthenticated;
+        return this.currentCookie[this.#guardType].isAuthenticated;
     }
     id() {
-        if (typeof this.#session.auth[this.#guardType].id === 'undefined' || !this.#session.auth[this.#guardType].id) {
-            return null;
+        if (this.check()) {
+            return this.currentCookie[this.#guardType].id;
         }
-        return this.#session.auth[this.#guardType].id;
     }
     logout() {
-        this.#session.auth[this.#guardType].isAuthenticated = false;
-        this.#session.auth[this.#guardType].id = null;
+        let authCookie = JSON.parse(this.#req.cookies.auth);
+        authCookie[this.#guardType].isAuthenticated = false;
+        authCookie[this.#guardType].id = null;
+        authCookie[this.#guardType].user = null;
+        this.#res.cookie('auth', JSON.stringify(authCookie), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+        });
     }
     user() {
-        return this.#session.user[this.#guardType];
+        if (this.check()) {
+            return this.currentCookie[this.#guardType].user;
+        }
     }
 }
 

@@ -43,7 +43,7 @@ class Core extends GlobalFunctions {
         let whereClause = '';
         if (sqlConditions || sqlOrConditions) {
             whereClause = ' WHERE';
-            if (sqlConditions) whereClause += ` (${sqlConditions})`;
+            if (sqlConditions) whereClause += ` ${sqlConditions}`;
             if (sqlOrConditions) whereClause += (sqlConditions ? ' AND ' : ' ') + `(${sqlOrConditions})`;
         }
 

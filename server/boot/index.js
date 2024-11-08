@@ -12,22 +12,25 @@ const defaultGuard = Configure.read('auth.default.guard');
 const defaultController = Configure.read('default.prefix_controller');
 const guards = Configure.read('auth.guards');
 const FileStore = require('session-file-store')(session);
+const cookieParser = require('cookie-parser');
+const csrf = require('../../libs/Middleware/Csrf');
 Boot.up();
 
 const app = express();
-
 let store = null;
 
 if (process.env.NODE_ENV === 'production') {
     store = Configure.read(`session.${process.env.SESSION_STORE}`)();
 } else {
-    store = new FileStore({
-        path: path.join(__dirname, '..', '..', 'database', 'sessions'),
-        ttl: 86400,
-        retries: 3
+    const SQLiteStore = require('connect-sqlite3')(session);
+    store = new SQLiteStore({
+        dir: path.join(__dirname, '..', '..', 'database', 'sessions'), // Directory for the SQLite database file
+        db: 'sessions.sqlite', // SQLite database file name
+        table: 'sessions', // Table name for session storage
+        ttl: 86400, // Time-to-live in seconds (1 day)
     });
 }
-
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
@@ -57,18 +60,33 @@ app.set('views', viewsPath);
 app.set('view engine', 'ejs');
 
 app.use((req, res, next) => {
-    // Initialize auth session object if not already set
     if (!req.session['auth']) {
         req.session['auth'] = {};
     }
 
-    // Initialize other session properties as needed
     const sessionKeys = Object.keys(guards).filter((ele) => guards[ele].driver === 'session');
     sessionKeys.forEach((auth) => {
         if (!req.session['auth'][auth]) {
             req.session['auth'][auth] = { isAuthenticated: false, id: null };
         }
     });
+
+    if (!req.cookies['auth']) {
+        const authData = {};
+
+        sessionKeys.forEach((auth) => {
+            authData[auth] = { isAuthenticated: false, id: null, user: null };
+        });
+
+        res.cookie('auth', JSON.stringify(authData), {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+        });
+    }
+
+
 
     if (!req.session['global_variables']) {
         req.session['global_variables'] = {};
@@ -80,7 +98,7 @@ app.use((req, res, next) => {
 
     next();
 });
-
+app.use(csrf);
 // Ensure view directory exists before using it
 app.use((req, res, next) => {
     if (!fs.existsSync(viewsPath)) {
@@ -92,7 +110,7 @@ app.use((req, res, next) => {
 // Route middleware to check and setup route variables
 app.use((req, res, next) => {
     res.locals.config = (value) => Configure.read(value);
-    res.auth = () => new Auth(req);
+    res.auth = () => new Auth(req, res);
     res.locals.auth = () => res.auth();
     req.uriPath = req.path.split('/');
     req.uriPath.shift();
@@ -163,6 +181,10 @@ app.get('/debug', (req, res) => {
         return res.send(req.session.auth);
     }
     return res.send('Debug mode is disabled');
+});
+app.get('/revoke-cookie', (req, res) => {
+    res.clearCookie('auth');
+    return res.send('Cookie revoked');
 });
 
 // Helper function to capitalize the first letter

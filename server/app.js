@@ -1,5 +1,4 @@
 require('dotenv').config();
-const express = require('express');
 const app = require('./boot');
 const adminRouter = require('../app/Admin/Route');
 const userRouter = require('../app/User/Route');

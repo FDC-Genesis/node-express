@@ -49,8 +49,7 @@ class BaseController extends GlobalFunctions {
     // authentications
     #auth(role) {
         return (req, res, next) => {
-            if (req.session.auth[role].isAuthenticated) {
-                // this.log(req.protocol, 'debug');
+            if (res.auth().guard(role).check()) {
                 next();
                 return;
             }
@@ -59,7 +58,7 @@ class BaseController extends GlobalFunctions {
     }
     #guest(role) {
         return (req, res, next) => {
-            if (!req.session.auth[role].isAuthenticated) {
+            if (!res.auth().guard(role).check()) {
                 next();
                 return;
             }

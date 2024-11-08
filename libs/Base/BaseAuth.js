@@ -4,6 +4,7 @@ class BaseAuth {
     provider;
     #forFind;
     #model;
+    currentCookie;
     constructor() {
 
     }

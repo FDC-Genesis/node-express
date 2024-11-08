@@ -28,7 +28,7 @@ const viewsPath = path.join(__dirname, '..', '..', 'view');
 
 let store = null;
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && process.env.DEPLOYED === 'true') {
     store = Configure.read(`session.${process.env.SESSION_STORE}`)();
 } else {
     const SQLiteStore = require('connect-sqlite3')(session);
@@ -45,7 +45,7 @@ const sessionObj = {
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 * 7
     },

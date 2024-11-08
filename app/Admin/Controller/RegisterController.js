@@ -48,7 +48,7 @@ class RegisterController extends Controller {
         header: "Account created successfully.",
         content: "This is an example mailer."
       });
-      this.flash.write('message', 'Admin created successfully.');
+      this.flash.write('success', 'Admin created successfully.');
       return res.redirect(this.auth('admin').redirectFail());
     }
     return res.redirect('/admin/register');

@@ -26,11 +26,13 @@ class NodeMailer {
             text: `${params.header}\n\n${params.content}`
         };
 
-        try {
-            let info = await transporter.sendMail(mailOptions);
-            console.log('Message sent: %s', info.messageId);
-        } catch (error) {
-            console.error('Error sending email:', error);
+        if (Configure.read('mailer.mailer')) {
+            try {
+                let info = await transporter.sendMail(mailOptions);
+                console.log('Message sent: %s', info.messageId);
+            } catch (error) {
+                console.error('Error sending email:', error);
+            }
         }
     }
 }

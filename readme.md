@@ -67,4 +67,4 @@ using
 this.config('auth'); // this will return the value of config/auth.js
 this.config('auth.guards') // this will return the value of guards key in config/auth.js file
 
-
+In view file you should just use config() function

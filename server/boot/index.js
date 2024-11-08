@@ -102,7 +102,6 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     res.locals.config = (value) => Configure.read(value);
     res.auth = () => new Auth(req, res);
-    res.locals.auth = () => res.auth();
     req.uriPath = req.path.split('/');
     req.uriPath.shift();
 

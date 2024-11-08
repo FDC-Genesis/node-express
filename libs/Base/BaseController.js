@@ -40,6 +40,7 @@ class BaseController extends GlobalFunctions {
                 const home = req.routeSrc.type;
                 res.render('Error', { message, home });
             }
+            res.locals.auth = (guard = Configure.read('auth.default.guard')) => res.auth().guard(guard);
             this.back = () => res.redirect(req.headers.referer || req.headers.host);
             res.locals.host = `${req.protocol}://${req.headers.host}`;
             next();

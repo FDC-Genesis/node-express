@@ -25,7 +25,7 @@ A file will be created in api/{Entity}/Controller/TestController.js
 A file will be created in view/{Entity}/Test/index.ejs
 
 ### Create Migration
--node kira make migration test.js
+-node kira make migration test
 A file will be created in database/migrations/create_table_test.js
 
 ### Migrate

@@ -15,7 +15,7 @@ class Auth extends BaseAuth {
         super();
         this.guard(Configure.read('auth.default.guard'));
         this.#req = req;
-        this.currentCookie = typeof req.cookies.auth !== 'undefined' ? JSON.parse(req.cookies.auth) : Configure.read('app');
+        this.currentCookie = this.#req.cookies.auth ? this.#safeParse(this.#req.cookies.auth) : Configure.read('app');
         this.#res = res;
         this.#session = this.#req.session;
     }
@@ -60,7 +60,7 @@ class Auth extends BaseAuth {
                 this.#res.cookie('auth', JSON.stringify(authCookie), {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',
-                    maxAge: 1000 * 60 * 60 * 24
+                    maxAge: 1000 * 60 * 60 * 24 * 356
                 });
                 this.#req.flash('logged', true);
                 return true;
@@ -102,6 +102,14 @@ class Auth extends BaseAuth {
     user() {
         if (this.check()) {
             return this.currentCookie[this.#guardType].user;
+        }
+    }
+
+    #safeParse(cookieValue) {
+        try {
+            return JSON.parse(cookieValue);
+        } catch (error) {
+            return {}; // return a fallback if JSON is invalid
         }
     }
 }

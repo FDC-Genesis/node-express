@@ -39,7 +39,7 @@ app.use((req, res, next) => {
     if (!req.cookies['auth']) {
         res.cookie('auth', JSON.stringify(Configure.read('app')), {
             httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24,
+            maxAge: 1000 * 60 * 60 * 24 * 7,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Lax',
         });

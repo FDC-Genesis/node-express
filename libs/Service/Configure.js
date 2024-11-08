@@ -11,6 +11,15 @@ class Configure {
       let basePath = this.basePath;
       let currentPath;
 
+      if (keys.length === 1) {
+         const singleKeyPath = path.join(basePath, keys[0]);
+         if (fs.existsSync(singleKeyPath + '.js')) {
+            return require(singleKeyPath);
+         } else {
+            return undefined;
+         }
+      }
+
       do {
          currentPath = path.join(basePath, keys.shift());
       } while (fs.existsSync(currentPath) && fs.lstatSync(currentPath).isDirectory());

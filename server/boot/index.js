@@ -3,29 +3,36 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const flash = require('connect-flash');
-const mysql = require('mysql2');
 const fs = require('fs');
 const Paginator = require('../../libs/Private/Paginator');
 const Configure = require('../../libs/Service/Configure');
 const Auth = require('../../libs/Middleware/Auth');
 const Boot = require('../../libs/Service/Boot');
+const defaultGuard = Configure.read('auth.default.guard');
+const defaultController = Configure.read('default.prefix_controller');
+const guards = Configure.read('auth.guards');
+const FileStore = require('session-file-store')(session);
+Boot.up();
 
 const app = express();
 
-// Set up session store (same as before, handle session in non-OOP way)
-let sessionStore = null;
 let store = null;
-const defaultGuard = Configure.read('auth.default.guard');
-const defaultPrefix = Configure.read(`auth.providers.${Configure.read(`auth.guards.${defaultGuard}.provider`)}.prefix`);
-const defaultController = Configure.read('default.prefix_controller');
 
-// Set up middlewares
+if (process.env.NODE_ENV === 'production') {
+    store = Configure.read(`session.${process.env.SESSION_STORE}`)();
+} else {
+    store = new FileStore({
+        path: path.join(__dirname, '..', '..', 'database', 'sessions'),
+        ttl: 86400,
+        retries: 3
+    });
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 
-// Session configuration
-let sessionObj = {
+const sessionObj = {
     secret: process.env.MAIN_KEY || 'test-secret',
     resave: false,
     saveUninitialized: false,
@@ -36,29 +43,9 @@ let sessionObj = {
     },
 };
 
-if (process.env.NODE_ENV !== 'production') {
-    // Development: SQLite session store
-    const SQLiteStore = require('connect-sqlite3')(session);
-    store = new SQLiteStore({
-        db: path.join('sessions.sqlite'),
-        dir: path.join(__dirname, '..', '..', 'database'),
-    });
-} else {
-    const Redis = require('ioredis');
-    const RedisStore = require('connect-redis').default;
-    const redis = new Redis({
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-        password: process.env.REDIS_PASSWORD,
-        tls: {},  // Enabling TLS/SSL
-    });
-
-    store = new RedisStore({
-        client: redis,
-    });
+if (store) {
+    sessionObj.store = store;
 }
-
-if (store) sessionObj.store = store;  // Ensure store is applied before session middleware
 app.use(session(sessionObj));
 
 // Flash messages
@@ -68,6 +55,31 @@ app.use(flash());
 const viewsPath = path.join(__dirname, '..', '..', 'view');
 app.set('views', viewsPath);
 app.set('view engine', 'ejs');
+
+app.use((req, res, next) => {
+    // Initialize auth session object if not already set
+    if (!req.session['auth']) {
+        req.session['auth'] = {};
+    }
+
+    // Initialize other session properties as needed
+    const sessionKeys = Object.keys(guards).filter((ele) => guards[ele].driver === 'session');
+    sessionKeys.forEach((auth) => {
+        if (!req.session['auth'][auth]) {
+            req.session['auth'][auth] = { isAuthenticated: false, id: null };
+        }
+    });
+
+    if (!req.session['global_variables']) {
+        req.session['global_variables'] = {};
+    }
+
+    if (!req.session['user']) {
+        req.session['user'] = {};
+    }
+
+    next();
+});
 
 // Ensure view directory exists before using it
 app.use((req, res, next) => {

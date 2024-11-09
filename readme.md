@@ -7,14 +7,20 @@
 5. node kira migrate
 6. npm run devStart //for development
 
+## Create an entity
+-node kira make entity {EntityName} <br>
+Generates a new entity with the given name in
+folders
+api/
+app/
+view/
+
 ## Same Like Laravel Commands
 ### Create Model
 -node kira make model Test <br>
 A file will be created in libs/Model/Test.js
 
 ### Create Controller/ApiController
-The entity allowed for now is
-Admin, Developer, User <br>
 -node kira make controller Test {Entity} <br>
 A file will be created in app/{Entity}/Controller/TestController.js
 

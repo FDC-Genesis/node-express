@@ -31,13 +31,7 @@ let store = null;
 if (process.env.NODE_ENV === 'production' && process.env.DEPLOYED === 'true') {
     store = Configure.read(`session.${process.env.SESSION_STORE}`)();
 } else {
-    const SQLiteStore = require('connect-sqlite3')(session);
-    store = new SQLiteStore({
-        dir: path.join(__dirname, '..', '..', 'database', 'sessions'),
-        db: 'sessions.sqlite',
-        table: 'sessions',
-        ttl: 86400,
-    });
+    store = new FileStore();
 }
 
 const sessionObj = {
@@ -103,7 +97,7 @@ app.use((req, res, next) => {
     req.uriPath = req.path.split('/');
     req.uriPath.shift();
 
-    const routeSource = Object.keys(Configure.read('auth.guards'));
+    const routeSource = Object.keys(guards);
     const filteredRouteSource = routeSource.filter(route => route !== defaultGuard);
     if (!filteredRouteSource.includes(req.uriPath[0])) req.uriPath.unshift(defaultGuard);
 
@@ -112,10 +106,6 @@ app.use((req, res, next) => {
 
     next();
 });
-
-// Your actual route setups (for example, homeRouter or API routes)
-const homeRouter = express.Router();
-app.use(homeRouter);
 
 // Route rendering logic
 app.use((req, res, next) => {
@@ -152,18 +142,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes can now be declared here as before
-const apiRoutes = require('./api-index');
-const adminRouter = require('../../app/Admin/Route');
-const userRouter = require('../../app/User/Route');
-const developerRouter = require('../../app/Developer/Route');
-
-app.use('/admin', adminRouter);
-app.use('/developer', developerRouter);
-app.use('/', userRouter);
-app.use('/api', apiRoutes);
-
-// Debug route (example)
 app.get('/debug', (req, res) => {
     if (process.env.SESSION_DEBUG === 'true') {
         return res.send(req.session.auth);
@@ -179,5 +157,24 @@ app.get('/revoke-cookie', (req, res) => {
 function ucFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+// Routes can now be declared here as before
+const apiRoutes = require('./api-index');
+app.use('/api', apiRoutes);
+
+const guardsKeys = Object.keys(guards);
+const authConfig = Configure.read('auth');
+
+const appBaseRoute = '../../app/';
+guardsKeys.forEach((ele) => {
+    const provider = authConfig.guards[ele].provider;
+    const directory = `${appBaseRoute}${authConfig.providers[provider].entity}/Route`;
+    const entityPrefix = authConfig.providers[provider].prefix;
+    if (fs.existsSync(path.join(__dirname, ...(`${directory}/index.js`.split('/'))))) {
+        const entityRoute = require(directory);
+        app.use(entityPrefix, entityRoute);
+    }
+});
+
 
 module.exports = app;

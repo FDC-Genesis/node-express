@@ -224,6 +224,56 @@ async function migrate() {
     }
 }
 
+function createDirectory(dirPath) {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+        console.log(`Created directory: ${dirPath}`);
+    }
+}
+
+function replacePlaceholders(content, entityName) {
+    const entityLowerCase = entityName.toLowerCase();
+    return content
+        .replace(/{{\s*Entity\s*}}/g, entityName)
+        .replace(/{{\s*EntityLowerCase\s*}}/g, entityLowerCase);
+}
+
+function createFileFromStub(stubPath, destPath, entityName) {
+    if (!fs.existsSync(stubPath)) {
+        console.error(`Stub file not found: ${stubPath}`);
+        return;
+    }
+
+    const content = fs.readFileSync(stubPath, "utf8");
+    const replacedContent = replacePlaceholders(content, entityName);
+    fs.writeFileSync(destPath, replacedContent);
+    console.log(`Created file: ${destPath}`);
+}
+
+function createEntity(entityName) {
+    if (!entityName) {
+        console.error("Please provide an entity name.");
+        return;
+    }
+
+    const viewPath = path.join("view", entityName);
+    const apiControllerPath = path.join("api", entityName, "Controller");
+    const apiRoutePath = path.join("api", entityName, "Route");
+    const appControllerPath = path.join("app", entityName, "Controller");
+    const appRoutePath = path.join("app", entityName, "Route");
+
+    createDirectory(viewPath);
+    createDirectory(apiControllerPath);
+    createDirectory(apiRoutePath);
+    createDirectory(appControllerPath);
+    createDirectory(appRoutePath);
+
+    createFileFromStub("stubs/apiroute.stub", path.join(apiRoutePath, "index.js"), entityName);
+    createFileFromStub("stubs/apicontroller.stub", path.join(apiControllerPath, "Controller.js"), entityName);
+    createFileFromStub("stubs/approute.stub", path.join(appRoutePath, "index.js"), entityName);
+    createFileFromStub("stubs/appcontroller.stub", path.join(appControllerPath, "Controller.js"), entityName);
+}
+
 const args = process.argv.slice(2);
 const [command, subCommand, name, specificArea] = args;
 
@@ -273,6 +323,9 @@ if (!command) {
                 secretKeys.forEach((ele) => {
                     makeMigration(ele.table, 'secret');
                 });
+                break;
+            case 'entity':
+                createEntity(name);
                 break;
             default:
                 console.error(`Unknown subCommand "${subCommand}" provided.`);

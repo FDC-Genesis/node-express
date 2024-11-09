@@ -27,6 +27,7 @@ const constant = {
             passed: '/dashboard',
             failed: '/login',
             prefix: '/',
+            entity: "User"
         },
         admins: {
             driver: 'eloquent',
@@ -34,6 +35,7 @@ const constant = {
             passed: '/admin/dashboard',
             failed: '/admin/login',
             prefix: '/admin',
+            entity: "Admin"
         },
         developers: {
             driver: 'eloquent',
@@ -41,6 +43,7 @@ const constant = {
             passed: '/developer/dashboard',
             failed: '/developer/login',
             prefix: '/developer',
+            entity: "Developer"
         }
     },
     access_tokens: {

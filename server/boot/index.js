@@ -12,6 +12,7 @@ const defaultGuard = Configure.read('auth.default.guard');
 const defaultController = Configure.read('default.prefix_controller');
 const guards = Configure.read('auth.guards');
 const FileStore = require('session-file-store')(session);
+const SQLiteStore = require('connect-sqlite3')(session);
 const cookieParser = require('cookie-parser');
 const csrf = require('../../libs/Middleware/Csrf');
 Boot.up();
@@ -31,7 +32,17 @@ let store = null;
 if (process.env.NODE_ENV === 'production' && process.env.DEPLOYED === 'true') {
     store = Configure.read(`session.${process.env.SESSION_STORE}`)();
 } else {
-    store = new FileStore();
+    // store = new FileStore({
+    //     path: './database/sessions',
+    // });
+    store = new SQLiteStore({
+        db: 'sessions.sqlite',
+        dir: 'database',
+        table: 'sessions',
+        ttl: 86400,
+        concurrentDB: true
+    });
+    // store = new session.MemoryStore();
 }
 
 const sessionObj = {

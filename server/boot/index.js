@@ -177,7 +177,8 @@ const guardsKeys = Object.keys(guards);
 const authConfig = Configure.read('auth');
 
 const appBaseRoute = '../../app/';
-guardsKeys.forEach((ele) => {
+
+for (const ele of guardsKeys) {
     const provider = authConfig.guards[ele].provider;
     const directory = `${appBaseRoute}${authConfig.providers[provider].entity}/Route`;
     const entityPrefix = authConfig.providers[provider].prefix;
@@ -185,7 +186,7 @@ guardsKeys.forEach((ele) => {
         const entityRoute = require(directory);
         app.use(entityPrefix, entityRoute);
     }
-});
+}
 
 
 module.exports = app;

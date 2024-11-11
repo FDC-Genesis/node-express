@@ -10,8 +10,8 @@ const authConfig = Configure.read('auth');
 guardsKeys.forEach((ele) => {
     const provider = authConfig.guards[ele].provider;
     const directory = `${apiBaseRoute}${authConfig.providers[provider].entity}/Route`;
-    if (fs.existsSync(`${directory}/index.js`)) {
-        app.use(`/${ele.toLowerCase()}`, require(directory));
+    if (fs.existsSync(`${__dirname}/${directory}/index.js`)) {
+        router.use(`/${ele.toLowerCase()}`, require(directory));
     }
 });
 

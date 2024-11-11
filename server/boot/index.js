@@ -22,13 +22,17 @@ class Application {
     constructor() {
         this.app = express();
         this.setup();
-    }
-    setup() {
         this.app.use(cookieParser());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(express.static(PathFinder.public_path()));
-
+        this.app.use(session(sessionObj));
+        this.app.use(flash());
+        this.app.use(csrf);
+        this.app.set('views', PathFinder.view_path());
+        this.app.set('view engine', 'ejs');
+    }
+    setup() {
         let store = null;
 
         if (process.env.NODE_ENV === 'production') {
@@ -61,9 +65,6 @@ class Application {
         if (store) {
             sessionObj.store = store;
         }
-        this.app.use(session(sessionObj));
-        this.app.use(flash());
-        this.app.use(csrf);
         this.app.use((req, res, next) => {
             if (!req.session) {
                 req.session = {};
@@ -90,8 +91,6 @@ class Application {
 
             next();
         });
-        this.app.set('views', PathFinder.view_path());
-        this.app.set('view engine', 'ejs');
 
         this.app.use((req, res, next) => {
             res.locals.config = (value) => Configure.read(value);

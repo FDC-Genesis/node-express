@@ -153,16 +153,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/debug', (req, res) => {
-    if (process.env.SESSION_DEBUG === 'true') {
-        return res.send(req.session.auth);
-    }
-    return res.send('Debug mode is disabled');
-});
-app.get('/revoke-cookie', (req, res) => {
-    res.clearCookie('auth');
-    return res.send('Cookie revoked');
-});
 
 // Helper function to capitalize the first letter
 function ucFirst(string) {
@@ -175,15 +165,13 @@ app.use('/api', apiRoutes);
 
 const guardsKeys = Object.keys(guards);
 const authConfig = Configure.read('auth');
-
 const appBaseRoute = '../../app/';
 
 for (const ele of guardsKeys) {
     const provider = authConfig.guards[ele].provider;
     const directory = `${appBaseRoute}${authConfig.providers[provider].entity}/Route`;
-    const entityPrefix = authConfig.providers[provider].prefix;
-    if (fs.existsSync(path.join(__dirname, ...(`${directory}/index.js`.split('/'))))) {
-        app.use(entityPrefix, require(directory));
+    if (fs.existsSync(`${__dirname}/${directory}/index.js`)) {
+        app.use(`/${ele.toLowerCase()}`, require(directory));
     }
 }
 

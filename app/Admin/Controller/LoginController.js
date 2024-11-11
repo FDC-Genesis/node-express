@@ -18,6 +18,7 @@ class LoginController extends Controller {
         this.set("error", this.flash.read('error'));
         this.set("old", this.flash.read('old'));
         this.set("success", this.flash.read('success'));
+        return res.json('hello');
         this.render();
     }
     async postLogin(req, res) {

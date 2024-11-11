@@ -183,8 +183,7 @@ for (const ele of guardsKeys) {
     const directory = `${appBaseRoute}${authConfig.providers[provider].entity}/Route`;
     const entityPrefix = authConfig.providers[provider].prefix;
     if (fs.existsSync(path.join(__dirname, ...(`${directory}/index.js`.split('/'))))) {
-        const entityRoute = require(directory);
-        app.use(entityPrefix, entityRoute);
+        app.use(entityPrefix, require(directory));
     }
 }
 

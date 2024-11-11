@@ -166,12 +166,13 @@ app.use('/api', apiRoutes);
 const guardsKeys = Object.keys(guards);
 const authConfig = Configure.read('auth');
 const appBaseRoute = '../../app/';
-
+console.log(guards)
 for (const ele of guardsKeys) {
-    const provider = authConfig.guards[ele].provider;
+    const provider = guards[ele].provider;
+    const entityPrefix = authConfig.providers[provider].prefix;
     const directory = `${appBaseRoute}${authConfig.providers[provider].entity}/Route`;
     if (fs.existsSync(`${__dirname}/${directory}/index.js`)) {
-        app.use(`/${ele.toLowerCase()}`, require(directory));
+        app.use(entityPrefix, require(directory));
     }
 }
 

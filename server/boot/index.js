@@ -74,7 +74,7 @@ class Application {
                 req.session['auth'] = Configure.read('app');
             }
 
-            if (!req.cookies['auth']) {
+            if (req.cookies === undefined || !req.cookies['auth']) {
                 res.cookie('auth', JSON.stringify(Configure.read('app')), {
                     httpOnly: true,
                     maxAge: 1000 * 60 * 60 * 24 * 7,

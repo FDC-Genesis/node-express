@@ -15,6 +15,7 @@ const FileStore = require('session-file-store')(session);
 const SQLiteStore = require('connect-sqlite3')(session);
 const cookieParser = require('cookie-parser');
 const csrf = require('../../libs/Middleware/Csrf');
+const PathFinder = require('../../libs/Service/PathFinder');
 Boot.up();
 
 const app = express();
@@ -22,8 +23,7 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', '..', 'public')));
-const viewsPath = path.join(__dirname, '..', '..', 'view');
+app.use(express.static(PathFinder.public_path()));
 
 
 
@@ -88,15 +88,8 @@ app.use((req, res, next) => {
 
     next();
 });
-
-app.use((req, res, next) => {
-    if (!fs.existsSync(viewsPath)) {
-        return res.status(500).send('View directory not found');
-    }
-    app.set('views', viewsPath);
-    app.set('view engine', 'ejs');
-    next();
-});
+app.set('views', PathFinder.view_path());
+app.set('view engine', 'ejs');
 
 // Route middleware to check and setup route variables
 app.use((req, res, next) => {
@@ -123,11 +116,11 @@ app.use((req, res, next) => {
     const originalRender = res.render;
 
     res.render = (view, locals, callback) => {
-        const viewPath = path.join(__dirname, '..', '..', 'view');
+        const viewPath = PathFinder.view_path();
         let newView;
         if (view !== 'Error') {
             newView = `${ucFirst(req.routeSrc.type)}/${ucFirst(req.routeSrc.controller || defaultController)}/${view}`;
-            if (fs.existsSync(path.join(viewPath, `${newView}.ejs`))) {
+            if (fs.existsSync(path.join(`${viewPath}${newView}.ejs`))) {
                 res.status(200);
             } else {
                 locals = { message: 'Page Not Found', home: req.routeSrc.type };
@@ -165,13 +158,12 @@ app.use('/api', apiRoutes);
 
 const guardsKeys = Object.keys(guards);
 const authConfig = Configure.read('auth');
-const appBaseRoute = '../../app/';
-console.log(guards)
+const appBaseRoute = PathFinder.app_path();
 for (const ele of guardsKeys) {
     const provider = guards[ele].provider;
     const entityPrefix = authConfig.providers[provider].prefix;
     const directory = `${appBaseRoute}${authConfig.providers[provider].entity}/Route`;
-    if (fs.existsSync(`${__dirname}/${directory}/index.js`)) {
+    if (fs.existsSync(`${directory}/index.js`)) {
         app.use(entityPrefix, require(directory));
     }
 }

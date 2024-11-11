@@ -41,7 +41,7 @@ class BaseController extends GlobalFunctions {
                 res.render('Error', { message, home });
             }
             this.back = () => res.redirect(req.headers.referer || req.headers.host);
-            res.locals.host = `${req.protocol}://${req.headers.host}`;
+            res.locals.host = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.headers.host}`;
             next();
         }
     }

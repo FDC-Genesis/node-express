@@ -29,7 +29,7 @@ app.use(express.static(PathFinder.public_path()));
 
 let store = null;
 
-if (process.env.NODE_ENV === 'production' && process.env.DEPLOYED === 'true') {
+if (process.env.NODE_ENV === 'production') {
     store = Configure.read(`session.${process.env.SESSION_STORE}`)();
 } else {
     // store = new FileStore({

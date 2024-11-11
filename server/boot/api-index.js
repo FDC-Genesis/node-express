@@ -1,18 +1,31 @@
 const express = require('express');
-const router = express.Router();
 const fs = require('fs');
 const Configure = require('../../libs/Service/Configure');
 const PathFinder = require('../../libs/Service/PathFinder');
-const apiBaseRoute = PathFinder.api_path();
-const guardsKeys = Object.keys(Configure.read('auth.guards'));
-const authConfig = Configure.read('auth');
 
-guardsKeys.forEach((ele) => {
-    const provider = authConfig.guards[ele].provider;
-    const directory = `${apiBaseRoute}${authConfig.providers[provider].entity}/Route`;
-    if (fs.existsSync(`${directory}/index.js`)) {
-        router.use(`/${ele.toLowerCase()}`, require(directory));
+class ApiRouter {
+    constructor() {
+        this.router = express.Router();
+        this.apiBaseRoute = PathFinder.api_path();
+        this.authConfig = Configure.read('auth');
+        this.guardsKeys = Object.keys(this.authConfig.guards);
+        this.initializeRoutes();
     }
-});
 
-module.exports = router;
+    initializeRoutes() {
+        this.guardsKeys.forEach((guard) => {
+            const provider = this.authConfig.guards[guard].provider;
+            const directory = `${this.apiBaseRoute}${this.authConfig.providers[provider].entity}/Route`;
+
+            if (fs.existsSync(`${directory}/index.js`)) {
+                this.router.use(`/${guard.toLowerCase()}`, require(directory));
+            }
+        });
+    }
+
+    getRouter() {
+        return this.router;
+    }
+}
+
+module.exports = new ApiRouter().getRouter();

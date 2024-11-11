@@ -1,16 +1,25 @@
-require('dotenv').config();
-const app = require('./boot');
-
-// Debug route for session inspection
-app.get('/debug', (req, res) => {
-    if (process.env.SESSION_DEBUG === 'true') {
-        return res.send(req.session.auth);
+class AppController {
+    constructor() {
+        this.app = require('./boot');
+        this.setupRoutes();
     }
-    return res.send('Debug mode is disabled');
-});
-app.get('/revoke-cookie', (req, res) => {
-    res.clearCookie('auth');
-    return res.send('Cookie revoked');
-});
 
-module.exports = app;
+    sendApiResponse(res, message, error = true) {
+        const response = { message, error };
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(response, null, 4));
+    }
+
+    setupRoutes() {
+        this.app.use((req, res) => {
+            let [, r] = req.path.split('/');
+            if (r === 'api') {
+                this.sendApiResponse(res, 'Request URL not found');
+            } else {
+                res.status(404).render('Error', { message: 'Page Not Found' });
+            }
+        });
+    }
+}
+
+module.exports = new AppController().app;

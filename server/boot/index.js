@@ -26,8 +26,6 @@ class Application {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(express.static(PathFinder.public_path()));
-        this.app.use(session(sessionObj));
-        this.app.use(flash());
         this.app.use(csrf);
         this.app.set('views', PathFinder.view_path());
         this.app.set('view engine', 'ejs');
@@ -65,6 +63,8 @@ class Application {
         if (store) {
             sessionObj.store = store;
         }
+        this.app.use(session(sessionObj));
+        this.app.use(flash());
         this.app.use((req, res, next) => {
             if (!req.session) {
                 req.session = {};
